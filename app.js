@@ -1,9 +1,11 @@
 const express = require('express');
 const helpers = require('./_helpers');
 const app = express();
+
 // 測試 models 內的檔案是否有正常運作，有問題會報錯
 const db = require('./models')
 const port = 3000
+
 const passport = require('./config/passport');
 
 const User = require('./models')['User'];
