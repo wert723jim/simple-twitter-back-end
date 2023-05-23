@@ -22,10 +22,6 @@ describe('# Like Model', () => {
   before(() => {
     // 賦予 Like 值，成為 Like Model 的 instance
     Like = LikeFactory(sequelize, DataTypes);
-    Like.init({
-      UserId: DataTypes.INTEGER,
-      TweetId: DataTypes.INTEGER,
-    });
   });
 
   // 清除 init 過的資料
@@ -36,8 +32,8 @@ describe('# Like Model', () => {
   // 檢查 like 是否有 UserId, TweetId 屬性，自動化測試會用到
   it('called Like.init with the correct parameters', () => {
     expect(Like.init).to.have.been.calledWithMatch({
-      UserId: DataTypes.INTEGER,
-      TweetId: DataTypes.INTEGER,
+      userId: DataTypes.INTEGER,
+      tweetId: DataTypes.INTEGER,
     });
   });
 
