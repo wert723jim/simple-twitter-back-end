@@ -12,7 +12,9 @@ describe('# User Model', () => {
   // 取出 Sequelize 的 DataTypes
   const { DataTypes } = Sequelize;
   // 將 models/user 中的 sequelize 取代成這裡的 Sequelize
-  const UserFactory = proxyquire('../../models/user', {});
+  const UserFactory = proxyquire('../../models/user', {
+    sequelize: Sequelize,
+  });
 
   // 宣告 User 變數
   let User;
@@ -20,7 +22,6 @@ describe('# User Model', () => {
   before(() => {
     // 賦予 User 值，成為 User Model 的 instance
     User = UserFactory(sequelize, DataTypes);
-    User.init({ name: DataTypes.STRING });
   });
 
   // 清除 init 過的資料
@@ -36,13 +37,6 @@ describe('# User Model', () => {
       });
     });
   });
-  // context('properties', () => {
-  //   it('called sequelize.define with the correct parameters', () => {
-  //     expect(sequelize.define).to.have.been.calledWithMatch({
-  //       name: DataTypes.STRING,
-  //     });
-  //   });
-  // });
 
   // 檢查 tweet 的關聯是否正確
   context('associations', () => {

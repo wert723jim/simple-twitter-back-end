@@ -20,10 +20,6 @@ describe('# Followship Model', () => {
   before(() => {
     // 賦予 FollowShip 值，成為 FollowShip Model
     FollowShip = FollowFactory(sequelize, DataTypes);
-    FollowShip.init({
-      followerId: DataTypes.INTEGER,
-      followingId: DataTypes.INTEGER,
-    });
   });
 
   // 清除 init 過的資料
