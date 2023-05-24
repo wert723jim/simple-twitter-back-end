@@ -3,12 +3,6 @@ const helpers = require('./_helpers');
 const app = express();
 const passport = require('./config/passport');
 
-const User = require('./models')['User'];
-User.create({
-  account: 'allen',
-  name: 'allen',
-});
-
 // use helpers.getUser(req) to replace req.user
 function authenticated(req, res, next) {
   // passport.authenticate('jwt', { ses...
