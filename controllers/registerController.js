@@ -1,44 +1,64 @@
 const User = require('../models')['User']
 const bcrypt = require('bcryptjs')
+const { Op } = require('sequelize')
 
-const addNewUser = (req, res, next) => {
+// 判斷是否可以搬到userController
+
+const addNewUser = async (req, res, next) => {
   // check if column is empty
-  if (
-    !req.body.account ||
-    !req.body.name ||
-    !req.body.email ||
-    !req.body.password ||
-    !req.body.checkPassword
-  )
-    throw new Error("Column can't be empty")
-  // TODO checkpassword equal
-  if (req.body.password !== req.body.checkPassword)
-    throw new Error('Password do not match')
-  // check if email already exist
-  // TODO check data duplicate
-  User.findOne({ where: { email: req.body.email } })
-    .then((user) => {
-      if (user) throw new Error('Email already exist.')
-      // TODO hash password
-      return bcrypt.hash(req.body.password, 10)
-    })
-    .then((hash) =>
-      User.create({
-        account: req.body.account,
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-      })
-    )
-    // success
-    .then(() => {
-      res.sendStatus(200)
-    })
-    // error handle
-    .catch((err) => next(err))
+  if (Object.keys(req.body).length === 0) {
+    return res.status(400).json({ msg: '請求錯誤' })
+  }
+  const requireField = {
+    account: '帳號',
+    name: '名稱',
+    email: '信箱',
+    password: '密碼',
+    checkPassword: '確認密碼',
+  }
+  for (let field in requireField) {
+    if (!Object.keys(req.body).includes(field) || !req.body[field]) {
+      return res.status(400).json({ msg: `${field}不能為空` })
+    }
+  }
 
-  // 判斷是否可以搬到userController
-  // const password = req.body.password;
+  // check email format
+  const regex =
+    /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+  if (!regex.test(req.body.email)) {
+    return res.status(400).json({ msg: '信箱格式有誤' })
+  }
+
+  // check password equal
+  if (req.body.password !== req.body.checkPassword) {
+    return res.status(400).json({ msg: '確認密碼有誤' })
+  }
+
+  // check duplicate
+  const dupUser = await User.findAll({
+    where: {
+      [Op.or]: [{ account: req.body.account }, { name: req.body.name }],
+    },
+  })
+  if (dupUser.length > 0) {
+    return res.status(400).json({ msg: '帳號或名稱重複' })
+  }
+
+  // hash password
+  const hashPassword = await bcrypt.hash(req.body.password, 10)
+
+  // create user
+  try {
+    await User.create({
+      account: req.body.account,
+      name: req.body.name,
+      email: req.body.email,
+      password: hashPassword,
+    })
+    return res.sendStatus(200)
+  } catch (error) {
+    return res.status(507).json({ msg: '資料庫請求錯誤', error })
+  }
 }
 
 module.exports = { addNewUser }

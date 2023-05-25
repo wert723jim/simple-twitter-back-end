@@ -1,16 +1,11 @@
 const express = require('express')
-const helpers = require('./_helpers')
 const app = express()
-const passport = require('./config/passport')
+// const helpers = require('./_helpers')  use helpers.getUser(req) to replace req.user
+// const passport = require('./config/passport')
+// app.use(passport.initialize())
 
-// use helpers.getUser(req) to replace req.user
-function authenticated(req, res, next) {
-  // passport.authenticate('jwt', { ses...
-}
-
-app.use(express.urlencoded({ extended: true }))
-
-app.use(passport.initialize())
+// app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
 // route
 app.use('/api', require('./routes/api'))
