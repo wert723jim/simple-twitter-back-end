@@ -39,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       name: DataTypes.STRING,
       avatar: DataTypes.STRING,
       introduction: DataTypes.TEXT,
+      refreshToken: DataTypes.STRING,
       // cover: DataTypes.STRING,
       role: DataTypes.STRING,
       // followingCount: DataTypes.INTEGER,

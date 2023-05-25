@@ -1,10 +1,7 @@
-const express = require('express')
-const router = express.Router()
-const registerController = require('../../controllers/registerController')
+const router = require('express').Router()
 const userController = require('../../controllers/userController')
 
 // users api
-router.route('/').post(registerController.addNewUser)
 router.route('/:id/tweets').get(userController.getUserTweets)
 router.route('/:id/replied_tweets').get(userController.getUserTweetsReply)
 router.route('/:id/likes').get(userController.getUserLikes)
