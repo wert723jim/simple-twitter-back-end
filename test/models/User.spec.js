@@ -1,13 +1,10 @@
 const chai = require('chai')
 const sinon = require('sinon')
-const proxyquire = require('proxyquire');
+const proxyquire = require('proxyquire')
 chai.use(require('sinon-chai'))
 
 const { expect } = require('chai')
-const {
-  sequelize,
-  Sequelize
-} = require('sequelize-test-helpers')
+const { sequelize, Sequelize } = require('sequelize-test-helpers')
 
 const db = require('../../models')
 
@@ -16,7 +13,7 @@ describe('# User Model', () => {
   const { DataTypes } = Sequelize
   // 將 models/user 中的 sequelize 取代成這裡的 Sequelize
   const UserFactory = proxyquire('../../models/user', {
-    sequelize: Sequelize
+    sequelize: Sequelize,
   })
 
   // 宣告 User 變數
@@ -35,11 +32,9 @@ describe('# User Model', () => {
   // 檢查 user 是否有 name 屬性, 自動化測試會用到
   context('properties', () => {
     it('called User.init with the correct parameters', () => {
-      expect(User.init).to.have.been.calledWithMatch(
-        {
-          name: DataTypes.STRING,
-        }
-      )
+      expect(User.init).to.have.been.calledWithMatch({
+        name: DataTypes.STRING,
+      })
     })
   })
 

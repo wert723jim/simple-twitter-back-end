@@ -1,10 +1,10 @@
-const model = require('../models');
-const User = model.User;
+const model = require('../models')
+const User = model.User
 
 const getAllUser = async (req, res) => {
-  const users = await User.findAll();
-  res.json(users);
-};
+  const users = await User.findAll()
+  res.json(users)
+}
 
 const getUserById = async (req, res) => {
   // TODO 處理沒有id
@@ -12,9 +12,9 @@ const getUserById = async (req, res) => {
     where: {
       id: req.params.id,
     },
-  });
-  res.json(user);
-};
+  })
+  res.json(user)
+}
 
 const getUserTweets = async (req, res) => {
   // TODO 錯誤處理
@@ -23,9 +23,9 @@ const getUserTweets = async (req, res) => {
       id: req.params.id,
     },
     include: model.Tweet,
-  });
-  res.json(user.Tweets);
-};
+  })
+  res.json(user.Tweets)
+}
 
 const getUserTweetsReply = async (req, res) => {
   // TODO 錯誤處理
@@ -34,9 +34,9 @@ const getUserTweetsReply = async (req, res) => {
       id: req.params.id,
     },
     include: model.Reply,
-  });
-  res.json(user.Replies);
-};
+  })
+  res.json(user.Replies)
+}
 
 const getUserLikes = async (req, res) => {
   // TODO 錯誤處理
@@ -45,9 +45,9 @@ const getUserLikes = async (req, res) => {
       id: req.params.id,
     },
     include: model.Like,
-  });
-  res.json(user.Likes);
-};
+  })
+  res.json(user.Likes)
+}
 
 const getUserFollowings = async (req, res) => {
   // TODO 錯誤處理
@@ -55,9 +55,9 @@ const getUserFollowings = async (req, res) => {
     where: {
       followerId: req.params.id,
     },
-  });
-  res.json(followship);
-};
+  })
+  res.json(followship)
+}
 
 const getUserFollowers = async (req, res) => {
   // TODO 錯誤處理
@@ -65,9 +65,9 @@ const getUserFollowers = async (req, res) => {
     where: {
       followingId: req.params.id,
     },
-  });
-  res.json(followship);
-};
+  })
+  res.json(followship)
+}
 
 const updateUserById = async (req, res) => {
   // TODO 錯誤處理
@@ -75,9 +75,9 @@ const updateUserById = async (req, res) => {
     where: {
       id: req.params.id,
     },
-  });
-  res.sendStatus(200);
-};
+  })
+  res.sendStatus(200)
+}
 
 module.exports = {
   getAllUser,
@@ -88,4 +88,4 @@ module.exports = {
   getUserFollowings,
   getUserFollowers,
   updateUserById,
-};
+}
