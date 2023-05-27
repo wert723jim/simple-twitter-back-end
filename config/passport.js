@@ -51,7 +51,12 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       req.accessToken = accessToken
       req.refreshToken = refreshToken
+      if (!profile) {
+        console.log('no profile error')
+        return done('no profile error', false)
+      }
       const user = await User.findOne({ where: { googleId: profile.id } })
+      console.log(user)
       if (!user) {
         // create user
         const password = bcrypt.hashSync(uuid(), 10)
@@ -60,6 +65,7 @@ passport.use(
           name: profile.displayName,
           email: profile._json.email,
           googleId: profile.id,
+          avatar: profile.photos[0].value,
           password,
           refreshToken,
         })

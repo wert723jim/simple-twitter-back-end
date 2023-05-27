@@ -41,8 +41,12 @@ module.exports = (sequelize, DataTypes) => {
       introduction: DataTypes.TEXT,
       refreshToken: DataTypes.STRING,
       // cover: DataTypes.STRING,
-      role: DataTypes.STRING,
+      role: {
+        type: DataTypes.STRING,
+        defaultValue: 'user',
+      },
       googleId: DataTypes.STRING,
+      facebookId: DataTypes.STRING,
       // followingCount: DataTypes.INTEGER,
     },
     {

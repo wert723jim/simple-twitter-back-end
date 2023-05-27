@@ -24,7 +24,15 @@ const authToken = async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: '30s' }
   )
-  res.json(accessToken)
+  res.json({
+    id: user.id,
+    account: user.account,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
+    accessToken,
+  })
 }
 
 const handleLogout = async (req, res) => {
