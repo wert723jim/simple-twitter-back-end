@@ -2,6 +2,12 @@ const helpers = require('../_helpers')
 const model = require('../models')
 
 const addTweet = (req, res) => {
+  if (!req.body.description) {
+    return res.status(400).json({ message: '請填入貼文內容' })
+  }
+  if (req.body.description.length > 140) {
+    return res.status(400).json({message: '貼文內容不得大於140字'})
+  }
   const user = helpers.getUser(req)
   model.Tweet.create({
     UserId: user.id,
