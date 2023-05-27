@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       refreshToken: DataTypes.STRING,
       // cover: DataTypes.STRING,
       role: DataTypes.STRING,
+      googleId: DataTypes.STRING,
       // followingCount: DataTypes.INTEGER,
     },
     {

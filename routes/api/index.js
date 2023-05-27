@@ -3,13 +3,13 @@ const registerController = require('../../controllers/registerController')
 const loginController = require('../../controllers/loginController')
 const refreshController = require('../../controllers/refreshController')
 const {
-  verifyUserExist,
   verifyAccessToken,
   verifyRefreshToken,
 } = require('../../middleware/verify')
 
 router.post('/users', registerController.addNewUser)
-router.post('/auth', verifyUserExist, loginController.authToken)
+router.use('/auth', require('./auth'))
+// router.post('/auth', verifyUserExist, loginController.authToken)
 router.get('/refresh', verifyRefreshToken, refreshController.getAccessToken)
 router.get('/logout', verifyRefreshToken, loginController.handleLogout)
 
