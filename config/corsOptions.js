@@ -5,6 +5,8 @@ const corsOptions = {
       ? cb(null, true)
       : cb(new Error('Not allowed by CORS'))
   },
+  // 新增這項設定，才能讓前端接到 cookie
+  credentials: true,
   optionsSuccessStatus: 200,
 }
 
