@@ -10,11 +10,10 @@ const {
 
 router.post('/users', registerController.addNewUser)
 router.use('/auth', require('./auth'))
-// router.post('/auth', verifyUserExist, loginController.authToken)
 router.get('/refresh', verifyRefreshToken, refreshController.getAccessToken)
 router.get('/logout', verifyRefreshToken, loginController.handleLogout)
 
-// router.use(verifyAccessToken)
+router.use(verifyAccessToken)
 router.get('/myInfo', (req, res) => res.json(getUser(req)))
 router.use('/users', require('./users'))
 router.use('/tweets', require('./tweets'))

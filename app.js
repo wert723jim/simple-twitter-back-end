@@ -4,10 +4,9 @@ const app = express()
 const cors = require('cors')
 const cookieParser = require('cookie-parser')
 const corsOptions = require('./config/corsOptions')
-
-// const helpers = require('./_helpers')  use helpers.getUser(req) to replace req.user
-// const passport = require('./config/passport')
-// app.use(passport.initialize())
+const swaggerUi = require('swagger-ui-express')
+const YAML = require('yamljs')
+const swaggerDocument = YAML.load('./openapi.yml')
 
 // cors setting
 app.use(cors(corsOptions))
@@ -21,5 +20,8 @@ app.use(cookieParser())
 
 // route
 app.use('/api', require('./routes/api'))
+
+// api docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 module.exports = app

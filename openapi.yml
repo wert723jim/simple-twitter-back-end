@@ -1,0 +1,150 @@
+openapi: '3.0.2'
+info:
+  title: simple-twitter
+  version: '1.0'
+  description: '提供貼文、留言和按讚服務的內容分享平台'
+
+servers:
+  - description: '開發用'
+    url: http://localhost:3000/api
+
+tags:
+  - name: account
+
+paths:
+  /auth:
+    post:
+      tags:
+        - 'account'
+      operationId: authToken
+      summary: 一般登入
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/login_request'
+      responses:
+        '200':
+          description: 授權成功，返回 user info && access token
+          headers:
+            set-cookie:
+              description: jwt=refreshToken 設置在cookie中
+              schema:
+                type: string
+                example: jwt={refresh token}; Max-Age=86400; Path=/; Expires={tomorrow}; HttpOnly; Secure; SameSite=None
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userInfo_accessToken'
+        '400':
+          description: 授權失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/login_fail'
+  /logout:
+    get:
+      tags:
+        - account
+      operationId: handleLogout
+      summary: 登出
+      responses:
+        '204':
+          description: 登出成功
+          headers:
+            set-cookie:
+              description: 清空jwt
+              schema:
+                type: string
+                example: jwt=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=None
+  /users:
+    post:
+      tags:
+        - account
+      operationId: addNewUser
+      summary: 註冊帳號
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/register_request'
+      responses:
+        '204':
+          description: '註冊成功'
+        '400':
+          description: '帳號或名稱重複'
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '帳號或名稱重複' }
+
+components:
+  schemas:
+    login_request:
+      properties:
+        account:
+          type: string
+          description: 使用者帳號
+          example: 'user1'
+        password:
+          type: string
+          description: 使用者密碼
+          example: '12345678'
+      required:
+        - account
+        - password
+
+    userInfo_accessToken:
+      properties:
+        id:
+          type: integer
+          example: 1
+        account:
+          type: string
+          example: user1
+        name:
+          type: string
+          example: user1
+        email:
+          type: string
+          example: user1@example.com
+        role:
+          type: string
+          example: user
+        avatar:
+          type: string
+          example: null
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNjg1NTAzMDk5LCJleHAiOjE2ODU1MDMxMjl9.X1rEj_khoG1k6L0UxkhHa81wm2kHJ8hoVXcQwgRJ04w
+
+    login_fail:
+      properties:
+        message:
+          type: string
+          example: 帳號或密碼有誤
+
+    register_request:
+      properties:
+        account:
+          type: string
+          example: 'user1'
+        name:
+          type: string
+          example: 'user1'
+        email:
+          type: string
+          example: 'user1@example.com'
+        password:
+          type: string
+          example: '12345678'
+        checkPassword:
+          type: string
+          example: '12345678'
+      required:
+        - account
+        - name
+        - email
+        - password
+        - checkPassword

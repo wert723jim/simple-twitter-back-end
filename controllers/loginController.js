@@ -37,9 +37,11 @@ const authToken = async (req, res) => {
 
 const handleLogout = async (req, res) => {
   const refreshToken = req.cookies.jwt
-  const user = await User.findOne({ where: { refreshToken } })
-  user.refreshToken = null
-  await user.save()
+  if (refreshToken) {
+    const user = await User.findOne({ where: { refreshToken } })
+    user.refreshToken = null
+    await user.save()
+  }
   res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true })
   res.sendStatus(204)
 }

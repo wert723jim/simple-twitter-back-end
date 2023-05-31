@@ -1,6 +1,10 @@
 const corsOptions = {
   origin: (origin, cb) => {
-    const allowedOrigins = ['http://localhost:8080', 'http://localhost:3000']
+    const allowedOrigins = [
+      'http://localhost:8080',
+      'http://localhost:3000',
+      'http://localhost:18512',
+    ]
     allowedOrigins.includes(origin) || !origin
       ? cb(null, true)
       : cb(new Error('Not allowed by CORS'))
