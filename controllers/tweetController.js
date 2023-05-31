@@ -6,7 +6,7 @@ const addTweet = (req, res) => {
     return res.status(400).json({ message: '請填入貼文內容' })
   }
   if (req.body.description.length > 140) {
-    return res.status(400).json({message: '貼文內容不得大於140字'})
+    return res.status(400).json({ message: '貼文內容不得大於140字' })
   }
   const user = helpers.getUser(req)
   model.Tweet.create({
@@ -17,7 +17,7 @@ const addTweet = (req, res) => {
 }
 
 const getAllTweet = async (req, res) => {
-  const tweets = await model.Tweet.findAll({}, { include: model.User })
+  const tweets = await model.Tweet.findAll({ include: model.User })
   res.json(tweets)
 }
 
@@ -26,6 +26,7 @@ const getTweetById = async (req, res) => {
     where: {
       id: req.params.tweet_id,
     },
+    include: model.User,
   })
   res.json(tweet)
 }

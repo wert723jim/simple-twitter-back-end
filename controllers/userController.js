@@ -55,6 +55,7 @@ const getUserFollowings = async (req, res) => {
     where: {
       followerId: req.params.id,
     },
+    include: { model: model.User, as: 'Followings' },
   })
   res.json(followship)
 }
@@ -64,6 +65,10 @@ const getUserFollowers = async (req, res) => {
   const followship = await model.Followship.findAll({
     where: {
       followingId: req.params.id,
+    },
+    include: {
+      model: model.User,
+      as: 'Followers',
     },
   })
   res.json(followship)
