@@ -23,6 +23,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/login_request'
+        required: true
       responses:
         '200':
           description: 授權成功，返回 user info && access token

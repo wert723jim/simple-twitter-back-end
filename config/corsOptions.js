@@ -3,7 +3,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:8080',
       'http://localhost:3000',
-      'http://localhost:18512',
+      'http://localhost:18512', // for api docs
     ]
     allowedOrigins.includes(origin) || !origin
       ? cb(null, true)

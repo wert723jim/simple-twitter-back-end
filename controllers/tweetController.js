@@ -35,7 +35,6 @@ const getAllTweet = async (req, res) => {
           'likeCount',
         ],
       ],
-      exclude: ['UserId'],
     },
     include: [
       {
@@ -62,7 +61,6 @@ const getTweetById = async (req, res) => {
           'likeCount',
         ],
       ],
-      exclude: ['UserId'],
     },
     include: [
       {
