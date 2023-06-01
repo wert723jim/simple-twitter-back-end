@@ -88,8 +88,7 @@ const addReply = async (req, res) => {
   const user = helpers.getUser(req)
   await model.Reply.create({
     UserId: user.id,
-    T
-    weetId: req.params.tweet_id,
+    TweetId: req.params.tweet_id,
     comment: req.body.comment,
   })
   res.sendStatus(200)
