@@ -8,6 +8,10 @@ const {
   verifyRefreshToken,
 } = require('../../middleware/verify')
 
+router.get('/test', (req, res) => {
+  return res.json(req.headers)
+})
+
 router.post('/users', registerController.addNewUser)
 router.use('/auth', require('./auth'))
 router.get('/refresh', verifyRefreshToken, refreshController.getAccessToken)

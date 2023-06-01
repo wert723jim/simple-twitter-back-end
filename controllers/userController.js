@@ -12,6 +12,33 @@ const getUserById = async (req, res) => {
     where: {
       id: req.params.id,
     },
+    attributes: [
+      'id',
+      'account',
+      'name',
+      'email',
+      'role',
+      'introduction',
+      'avatar',
+    ],
+    include: [
+      {
+        model: model.Tweet,
+      },
+      {
+        model: model.Reply,
+        include: model.Tweet,
+      },
+      {
+        model: model.Like,
+        include: model.Tweet,
+      },
+    ],
+    order: [
+      [model.Tweet, 'createdAt', 'DESC'],
+      [model.Reply, 'createdAt', 'DESC'],
+      [model.Like, 'createdAt', 'DESC'],
+    ],
   })
   res.json(user)
 }

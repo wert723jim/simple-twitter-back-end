@@ -55,7 +55,7 @@ const addNewUser = async (req, res, next) => {
       email: req.body.email,
       password: hashPassword,
     })
-    return res.sendStatus(204)
+    return res.sendStatus(200)
   } catch (error) {
     return res.status(507).json({ message: '資料庫請求錯誤', error })
   }

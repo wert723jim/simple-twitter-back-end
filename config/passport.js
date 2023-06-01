@@ -12,7 +12,6 @@ passport.use(
     { usernameField: 'account' },
     async (account, password, done) => {
       // check user & password
-      console.log(account, password)
       const user = await User.findOne({ where: { account } })
       if (!user || !bcrypt.compareSync(password, user.password)) {
         return done(null, false, { message: '帳號或密碼有誤' })
@@ -55,7 +54,6 @@ passport.use(
         return done('no profile error', false)
       }
       const user = await User.findOne({ where: { googleId: profile.id } })
-      console.log(user)
       if (!user) {
         // create user
         const password = bcrypt.hashSync(uuid(), 10)

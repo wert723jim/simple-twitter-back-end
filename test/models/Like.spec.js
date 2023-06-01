@@ -32,8 +32,8 @@ describe('# Like Model', () => {
   // 檢查 like 是否有 UserId, TweetId 屬性，自動化測試會用到
   it('called Like.init with the correct parameters', () => {
     expect(Like.init).to.have.been.calledWithMatch({
-      userId: DataTypes.INTEGER,
-      tweetId: DataTypes.INTEGER,
+      UserId: DataTypes.INTEGER,
+      TweetId: DataTypes.INTEGER,
     })
   })
 

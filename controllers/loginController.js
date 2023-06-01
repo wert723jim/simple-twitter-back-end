@@ -24,6 +24,7 @@ const authToken = async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: '30s' }
   )
+  console.log('run login')
   res.json({
     id: user.id,
     account: user.account,
