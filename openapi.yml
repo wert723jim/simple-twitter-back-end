@@ -5,13 +5,17 @@ info:
   description: '提供貼文、留言和按讚服務的內容分享平台'
 
 servers:
-  - description: '開發用'
+  - description: '開發伺服器'
     url: http://localhost:3000/api
 
 tags:
   - name: account
+    description: 登入/登出/註冊
+  - name: tweets
+    description: 貼文
 
 paths:
+  # account
   /auth:
     post:
       tags:
@@ -23,7 +27,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/login_request'
-        required: true
+        # required: true
       responses:
         '200':
           description: 授權成功，返回 user info && access token
@@ -42,7 +46,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/login_fail'
+                type: object
+                example: { message: '帳號或密碼有誤' }
   /logout:
     get:
       tags:
@@ -70,17 +75,246 @@ paths:
             schema:
               $ref: '#/components/schemas/register_request'
       responses:
-        '204':
+        '200':
           description: '註冊成功'
         '400':
-          description: '帳號或名稱重複'
+          description: '請求錯誤'
+          content:
+            application/json:
+              examples:
+                duplicateError:
+                  summary: 帳號或名稱重複
+                  value:
+                    message: 帳號或名稱重複
+                emptyFieldError:
+                  summary: 欄位不能為空
+                  value:
+                    message: 欄位不能為空
+                emailError:
+                  summary: 信箱格式有誤
+                  value:
+                    message: 信箱格式有誤
+                checkPasswordError:
+                  summary: 確認密碼有誤
+                  value:
+                    message: 確認密碼有誤
+        '507':
+          description: '資料庫請求錯誤'
           content:
             application/json:
               schema:
                 type: object
-                example: { message: '帳號或名稱重複' }
+                example: { message: 資料庫請求錯誤 }
+  # tweets
+  /tweets:
+    get:
+      tags:
+        - tweets
+      operationId: getAllTweet
+      summary: 獲取所有貼文
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功獲取貼文資訊、作者資訊、按讚數和留言數
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/tweet'
+                    - $ref: '#/components/schemas/tweet'
+    post:
+      tags:
+        - tweets
+      operationId: addTweet
+      summary: 新增貼文
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: 發送貼文請求
+        content:
+          application/json:
+            schema:
+              type: object
+              example: { description: 'this is new post' }
+      responses:
+        '200':
+          description: 成功發送貼文
+        '400':
+          description: 請求錯誤
+          content:
+            application/json:
+              examples:
+                emptyContentError:
+                  summary: 貼文內容為空
+                  value:
+                    message: 請填入貼文內容
+                tooMuchContentError:
+                  summary: 貼文內容過長
+                  value:
+                    message: 貼文內容不得大於140字
+        '507':
+          description: 資料庫請求錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 資料庫請求錯誤 }
+  /tweets/{tweet_id}:
+    get:
+      tags:
+        - tweets
+      operationId: getTweetById
+      summary: 獲取單一貼文
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+          required: true
+          description: 指定貼文的id
+      responses:
+        '200':
+          description: 成功獲取該貼文的資訊、作者資訊、按讚數和留言
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/tweet'
+  /tweets/{tweet_id}/like:
+    post:
+      tags:
+        - tweets
+      operationId: likeTweet
+      summary: 對貼文按讚
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+          required: true
+          description: 欲按讚貼文的id
+      responses:
+        '200':
+          description: 成功按讚
+        '422':
+          description: 按讚失敗，已經對該貼文按過讚了
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 已經對該貼文按過讚了}
+        '507':
+          description: 資料庫請求錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 資料庫請求錯誤 }
+  /tweets/{tweet_id}/unlike:
+    post:
+      tags:
+        - tweets
+      operationId: unlikeTweet
+      summary: 對貼文收回讚
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+          required: true
+          description: 欲收回讚的貼文id
+      responses:
+        '200':
+          description: 成功對貼文收回讚（硬刪除）
+        '507':
+          description: 資料庫請求錯誤
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 資料庫請求錯誤 }
+  /tweets/{tweet_id}/replies:
+    get:
+      tags:
+        - tweets
+      operationId: getAllReplies
+      summary: 獲取指定貼文的所有留言和留言者資訊
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+          required: true
+          description: 欲取得留言的貼文id
+      responses:
+        '200':
+          description: 獲取該貼文的所有留言和留言者資訊
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/reply'
+                    - $ref: '#/components/schemas/reply'
+    post:
+      tags:
+        - tweets
+      operationId: addReply
+      summary: 對指定貼文新增留言
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+          required: true
+          description: 欲新增留言的貼文id
+      requestBody:
+        description: 留言內容
+        content:
+          application/json:
+            schema:
+              type: object
+              example: { comment: 'this is reply content' }
+      responses:
+        '200':
+          description: 成功新增留言
+        '400':
+          description: 留言內容不能為空
+          content:
+            application/json:
+              examples:
+                emptyCommentError:
+                  summary: 留言內容為空
+                  value:
+                    message: 請填入留言內容
+                unknownTweetError:
+                  summary: 查無該貼文
+                  value:
+                    message: 留言失敗，查無該貼文
+                
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIn0.qgjPY00G3kdMPVpuUVQrLzrcenZCB3LcVom1F8JjsLE'
+
   schemas:
     login_request:
       properties:
@@ -120,12 +354,6 @@ components:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNjg1NTAzMDk5LCJleHAiOjE2ODU1MDMxMjl9.X1rEj_khoG1k6L0UxkhHa81wm2kHJ8hoVXcQwgRJ04w
 
-    login_fail:
-      properties:
-        message:
-          type: string
-          example: 帳號或密碼有誤
-
     register_request:
       properties:
         account:
@@ -149,3 +377,60 @@ components:
         - email
         - password
         - checkPassword
+
+    tweet:
+      properties:
+        id:
+          type: integer
+          example: 2
+        description:
+          type: string
+          example: this is description of tweet
+        createdAt:
+          type: string
+          example: '2023-05-31T03:00:07.000Z'
+        updatedAt:
+          type: string
+          example: '2023-05-31T03:00:07.000Z'
+        replyCount:
+          type: integer
+          example: 1
+        likeCount:
+          type: integer
+          example: 1
+        User:
+          type: object
+          $ref: '#/components/schemas/userInfo'
+
+    userInfo:
+      properties:
+        id:
+          type: integer
+          example: 20
+        account:
+          type: string
+          example: user1
+        name:
+          type: string
+          example: 12345678
+        avatar:
+          type: string
+          example: null
+
+    reply:
+      properties:
+        id:
+          type: integer
+          example: 3
+        TweetId:
+          type: integer
+          example: 1
+        comment:
+          type: string
+          example: this is test comment
+        createdAt:
+          type: string
+          example: '2023-06-01T13:30:00.000Z'
+        User:
+          type: object
+          $ref: '#/components/schemas/userInfo'

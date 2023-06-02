@@ -9,13 +9,17 @@ const addTweet = (req, res) => {
   if (req.body.description.length > 140) {
     return res.status(400).json({ message: '貼文內容不得大於140字' })
   }
-  // TODO 資料庫錯誤處理
-  const user = helpers.getUser(req)
-  model.Tweet.create({
-    UserId: user.id,
-    description: req.body.description,
-  })
-  res.sendStatus(200)
+  try {
+    const user = helpers.getUser(req)
+    model.Tweet.create({
+      UserId: user.id,
+      description: req.body.description,
+    })
+    res.sendStatus(200)
+  } catch (err) {
+    console.log(err)
+    res.status(507).json({ message: '資料庫請求錯誤' })
+  }
 }
 
 const getAllTweet = async (req, res) => {
@@ -35,11 +39,12 @@ const getAllTweet = async (req, res) => {
           'likeCount',
         ],
       ],
+      exclude: ['UserId'],
     },
     include: [
       {
         model: model.User,
-        attributes: ['account', 'name', 'avatar'],
+        attributes: ['id', 'account', 'name', 'avatar'],
       },
     ],
     order: [['createdAt', 'DESC']],
@@ -56,34 +61,41 @@ const getTweetById = async (req, res) => {
       include: [
         [
           sequelize.literal(
+            '(SELECT COUNT(id) FROM Replies WHERE Replies.TweetId = Tweet.id)'
+          ),
+          'replyCount',
+        ],
+        [
+          sequelize.literal(
             '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
           ),
           'likeCount',
         ],
       ],
+      exclude: ['UserId'],
     },
     include: [
       {
         model: model.User,
-        attributes: ['account', 'name', 'avatar'],
-      },
-      {
-        model: model.Reply,
-        include: [
-          {
-            model: model.User,
-            attributes: ['account', 'name', 'avatar'],
-          },
-        ],
+        attributes: ['id', 'account', 'name', 'avatar'],
       },
     ],
-    order: [[model.Reply, 'createdAt', 'DESC']],
   })
   res.json(tweet)
+  // TODO 若沒有該貼文id，則返回null，看是否需要優化
 }
 
 const addReply = async (req, res) => {
+  if (!req.body.comment) {
+    return res.status(400).json({ message: '請填入留言內容' })
+  }
   const user = helpers.getUser(req)
+  const tweetCount = await model.Tweet.count({
+    where: { id: req.params.tweet_id },
+  })
+  if (tweetCount === 0) {
+    return res.status(400).json({ message: '留言失敗，查無該貼文' })
+  }
   await model.Reply.create({
     UserId: user.id,
     TweetId: req.params.tweet_id,
@@ -97,28 +109,54 @@ const getAllReplies = async (req, res) => {
     where: {
       tweetId: req.params.tweet_id,
     },
+    attributes: {
+      exclude: ['UserId', 'updatedAt'],
+    },
+    include: [
+      {
+        model: model.User,
+        attributes: ['id', 'account', 'name', 'avatar'],
+      },
+    ],
+    order: [['createdAt', 'DESC']],
   })
   res.json(replies)
+  // TODO 若沒有該貼文id，則返回[]，看是否需要優化
 }
 
 const likeTweet = async (req, res) => {
+  // TODO 對貼文關聯做優化，若沒有該貼文不能按讚
   const user = helpers.getUser(req)
-  await model.Like.create({
-    UserId: user.id,
-    TweetId: req.params.tweet_id,
-  })
-  res.sendStatus(200)
+  try {
+    const [row, created] = await model.Like.findOrCreate({
+      where: {
+        UserId: user.id,
+        TweetId: req.params.tweet_id,
+      },
+    })
+    if (created) {
+      return res.sendStatus(200)
+    }
+    return res.status(422).json({ message: '已經對該貼文按過讚了' })
+  } catch (err) {
+    res.status(507).json({ message: '資料庫請求錯誤' })
+  }
 }
 
 const unlikeTweet = (req, res) => {
+  // TODO 若本來就沒有讚，要如何優化處理
   const user = helpers.getUser(req)
-  model.Like.destroy({
-    where: {
-      userId: user.id,
-      tweetId: req.params.tweet_id,
-    },
-  })
-  res.sendStatus(200)
+  try {
+    model.Like.destroy({
+      where: {
+        userId: user.id,
+        tweetId: req.params.tweet_id,
+      },
+    })
+    res.sendStatus(200)
+  } catch (err) {
+    res.status(507).json({ message: '資料庫請求錯誤' })
+  }
 }
 
 const deleteTweet = (req, res) => {
