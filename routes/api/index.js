@@ -7,10 +7,7 @@ const {
   verifyAccessToken,
   verifyRefreshToken,
 } = require('../../middleware/verify')
-
-router.get('/test', (req, res) => {
-  return res.json(req.headers)
-})
+const { getMyInfo } = require('../../controllers/userController')
 
 router.post('/users', registerController.addNewUser)
 router.use('/auth', require('./auth'))
@@ -18,7 +15,7 @@ router.get('/refresh', verifyRefreshToken, refreshController.getAccessToken)
 router.get('/logout', verifyRefreshToken, loginController.handleLogout)
 
 router.use(verifyAccessToken)
-router.get('/myInfo', (req, res) => res.json(getUser(req)))
+router.get('/myInfo', getMyInfo)
 router.use('/users', require('./users'))
 router.use('/tweets', require('./tweets'))
 router.use('/followships', require('./followships'))

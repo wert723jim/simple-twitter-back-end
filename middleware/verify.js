@@ -31,6 +31,8 @@ const verifyAccessToken = (req, res, next) => {
 
 const verifyRefreshToken = async (req, res, next) => {
   const token = req.cookies.jwt
+  console.log(req.headers)
+  console.log(req.cookies)
   if (!token) {
     return res.status(401).json({ message: '請重新登入' })
   }

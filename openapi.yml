@@ -10,9 +10,10 @@ servers:
 
 tags:
   - name: account
-    description: 登入/登出/註冊
   - name: tweets
     description: 貼文
+  - name: users
+    description: 個人帳號
 
 paths:
   # account
@@ -105,13 +106,57 @@ paths:
               schema:
                 type: object
                 example: { message: 資料庫請求錯誤 }
+  /refresh:
+    get:
+      tags:
+        - account
+      operationId: getAccessToken
+      summary: 刷新 access token
+      parameters:
+        - in: cookie
+          name: jwt
+          schema:
+            type: string
+            default: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTY4NTY5NzYyMiwiZXhwIjoxNjg1Nzg0MDIyfQ.cVJne5rcDdZmqd50nJ-te6TsA1UNXhJunZz8Y1qYxHI
+          required: true
+          description: refresh token(無法 try it out)
+      responses:
+        '200':
+          description: 回傳 access token
+          content:
+            application/json:
+              schema:
+                type: string
+                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIn0.qgjPY00G3kdMPVpuUVQrLzrcenZCB3LcVom1F8JjsLE
+        '401':
+          description: refresh token 過期或不存在cookie中
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '請重新登入' }
+  /myInfo:
+    get:
+      tags:
+        - account
+      operationId: getMyInfo
+      summary: 當前使用者資訊
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功獲取個人資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/myInfo'
   # tweets
   /tweets:
     get:
       tags:
         - tweets
       operationId: getAllTweet
-      summary: 獲取所有貼文
+      summary: 所有貼文
       security:
         - BearerAuth: []
       responses:
@@ -167,7 +212,7 @@ paths:
       tags:
         - tweets
       operationId: getTweetById
-      summary: 獲取單一貼文
+      summary: 單一貼文
       security:
         - BearerAuth: []
       parameters:
@@ -175,6 +220,7 @@ paths:
           name: tweet_id
           schema:
             type: integer
+            default: 2
           required: true
           description: 指定貼文的id
       responses:
@@ -198,6 +244,7 @@ paths:
           name: tweet_id
           schema:
             type: integer
+            default: 2
           required: true
           description: 欲按讚貼文的id
       responses:
@@ -209,7 +256,7 @@ paths:
             application/json:
               schema:
                 type: object
-                example: { message: 已經對該貼文按過讚了}
+                example: { message: 已經對該貼文按過讚了 }
         '507':
           description: 資料庫請求錯誤
           content:
@@ -230,6 +277,7 @@ paths:
           name: tweet_id
           schema:
             type: integer
+            default: 2
           required: true
           description: 欲收回讚的貼文id
       responses:
@@ -247,7 +295,7 @@ paths:
       tags:
         - tweets
       operationId: getAllReplies
-      summary: 獲取指定貼文的所有留言和留言者資訊
+      summary: 指定貼文的留言 & 留言者資訊
       security:
         - BearerAuth: []
       parameters:
@@ -255,6 +303,7 @@ paths:
           name: tweet_id
           schema:
             type: integer
+            default: 2
           required: true
           description: 欲取得留言的貼文id
       responses:
@@ -305,7 +354,188 @@ paths:
                   summary: 查無該貼文
                   value:
                     message: 留言失敗，查無該貼文
-                
+  #users
+  /users/{id}:
+    get:
+      tags:
+        - users
+      operationId: getUserById
+      summary: 指定帳號資訊
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            default: 20
+          description: 個人 id
+      responses:
+        '200':
+          description: 成功獲取帳號資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/fullUserInfo'
+        '400':
+          description: 沒有該id的帳號
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '查無此帳號' }
+    put:
+      tags:
+        - users
+      operationId: updateUserById
+      summary: 更新帳號資訊
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: 修改帳號的請求（待討論）
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/myInfo'
+      responses:
+        '200':
+          description: 成功修改帳號
+  /users/{id}/followers:
+    get:
+      tags:
+        - users
+      operationId: getUserFollowers
+      summary: 指定帳號的粉絲名單
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+            example: 2
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功獲取該帳號的粉絲名單
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/follower'
+                    - $ref: '#/components/schemas/follower'
+  /users/{id}/followings:
+    get:
+      tags:
+        - users
+      operationId: getUserFollowings
+      summary: 指定帳號的追蹤中名單
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+            example: 2
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功獲取該帳號的追蹤中名單
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/following'
+                    - $ref: '#/components/schemas/following'
+  /users/{id}/likes:
+    get:
+      tags:
+        - users
+      operationId: getUserLikes
+      summary: 指定帳號的按讚貼文
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+            example: 2
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功獲取該帳號喜歡的貼文
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/tweet'
+                    - $ref: '#/components/schemas/tweet'
+  /users/{id}/replied_tweets:
+    get:
+      tags:
+        - users
+      operationId: getUserTweetsReply
+      summary: 指定帳號回覆過的貼文
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功獲取該帳號回覆過的貼文
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/tweet'
+                    - $ref: '#/components/schemas/tweet'
+  /users/{id}/tweets:
+    get:
+      tags:
+        - users
+      operationId: getUserTweets
+      summary: 指定帳號的貼文
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功獲取該帳號的貼文
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/tweet'
+                    - $ref: '#/components/schemas/tweet'
 
 components:
   securitySchemes:
@@ -330,7 +560,7 @@ components:
         - account
         - password
 
-    userInfo_accessToken:
+    myInfo:
       properties:
         id:
           type: integer
@@ -350,6 +580,11 @@ components:
         avatar:
           type: string
           example: null
+
+    userInfo_accessToken:
+      allOf:
+        - $ref: '#/components/schemas/myInfo'
+      properties:
         accessToken:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNjg1NTAzMDk5LCJleHAiOjE2ODU1MDMxMjl9.X1rEj_khoG1k6L0UxkhHa81wm2kHJ8hoVXcQwgRJ04w
@@ -434,3 +669,71 @@ components:
         User:
           type: object
           $ref: '#/components/schemas/userInfo'
+
+    fullUserInfo:
+      allOf:
+        - $ref: '#/components/schemas/userInfo'
+      properties:
+        email:
+          type: string
+          example: user1@example.com
+        role:
+          type: string
+          example: 'user'
+        introduction:
+          type: string
+          example: introduction of user
+
+    follower:
+      properties:
+        followerId:
+          type: integer
+          example: 2
+        Followers.account:
+          type: string
+          example: 'user1'
+        Followers.name:
+          type: string
+          example: 'user1'
+        Followers.avatar:
+          type: string
+          example: null
+
+    following:
+      properties:
+        followingId:
+          type: integer
+          example: 2
+        Followings.account:
+          type: string
+          example: 'user1'
+        Followings.name:
+          type: string
+          example: 'user1'
+        Followings.avatar:
+          type: string
+          example: null
+
+    likeTweet:
+      properties:
+        id:
+          type: integer
+          example: 4
+        TweetId:
+          type: integer
+          example: 2
+        TweetI.description:
+          type: string
+          example: this is description of tweet
+        Tweet.User.id:
+          type: integer
+          example: 2
+        Tweet.User.account:
+          type: string
+          example: user1
+        Tweet.User.name:
+          type: string
+          example: user1
+        Tweet.User.avatar:
+          type: string
+          example: null
