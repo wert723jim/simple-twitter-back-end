@@ -174,7 +174,7 @@ paths:
                 items:
                   oneOf:
                     - $ref: '#/components/schemas/tweet'
-                    - $ref: '#/components/schemas/tweet'
+                    - $ref: '#/components/schemas/tweetNotLiked'
     post:
       tags:
         - tweets
@@ -728,9 +728,19 @@ components:
         likeCount:
           type: integer
           example: 1
+        liked:
+          type: boolean
+          example: 1
         User:
           type: object
           $ref: '#/components/schemas/userInfo'
+
+    tweetNotLiked:
+      allOf:
+        - $ref: '#/components/schemas/tweet'
+      properties:
+        liked:
+          example: null
 
     userInfo:
       properties:
@@ -806,29 +816,5 @@ components:
           type: string
           example: 'user1'
         Followings.avatar:
-          type: string
-          example: null
-
-    likeTweet:
-      properties:
-        id:
-          type: integer
-          example: 4
-        TweetId:
-          type: integer
-          example: 2
-        TweetI.description:
-          type: string
-          example: this is description of tweet
-        Tweet.User.id:
-          type: integer
-          example: 2
-        Tweet.User.account:
-          type: string
-          example: user1
-        Tweet.User.name:
-          type: string
-          example: user1
-        Tweet.User.avatar:
           type: string
           example: null

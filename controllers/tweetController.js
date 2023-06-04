@@ -23,6 +23,7 @@ const addTweet = (req, res) => {
 }
 
 const getAllTweet = async (req, res) => {
+  const userId = req.user.id
   const tweets = await model.Tweet.findAll({
     attributes: {
       include: [
@@ -37,6 +38,12 @@ const getAllTweet = async (req, res) => {
             '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
           ),
           'likeCount',
+        ],
+        [
+          sequelize.literal(
+            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
+          ),
+          'liked',
         ],
       ],
       exclude: ['UserId'],
@@ -53,6 +60,7 @@ const getAllTweet = async (req, res) => {
 }
 
 const getTweetById = async (req, res) => {
+  const userId = req.user.id
   const tweet = await model.Tweet.findOne({
     where: {
       id: req.params.tweet_id,
@@ -70,6 +78,12 @@ const getTweetById = async (req, res) => {
             '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
           ),
           'likeCount',
+        ],
+        [
+          sequelize.literal(
+            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
+          ),
+          'liked',
         ],
       ],
       exclude: ['UserId'],
