@@ -40,8 +40,9 @@ const getUserById = async (req, res) => {
 }
 
 const getUserTweets = async (req, res) => {
+  const userId = req.params.id
   const tweets = await model.Tweet.findAll({
-    where: { UserId: req.params.id },
+    where: { UserId: userId },
     attributes: {
       include: [
         [
@@ -55,6 +56,12 @@ const getUserTweets = async (req, res) => {
             '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
           ),
           'likeCount',
+        ],
+        [
+          sequelize.literal(
+            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
+          ),
+          'liked',
         ],
       ],
       exclude: ['UserId'],
@@ -71,6 +78,8 @@ const getUserTweets = async (req, res) => {
 }
 
 const getUserTweetsReply = async (req, res) => {
+  // TODO 新增comment
+  const userId = req.params.id
   const tweets = await model.Tweet.findAll({
     attributes: {
       include: [
@@ -86,14 +95,20 @@ const getUserTweetsReply = async (req, res) => {
           ),
           'likeCount',
         ],
+        [
+          sequelize.literal(
+            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
+          ),
+          'liked',
+        ],
       ],
       exclude: ['UserId'],
     },
     include: [
       {
         model: model.Reply,
-        where: { UserId: req.params.id },
-        attributes: [],
+        where: { UserId: userId },
+        attributes: ['comment'],
       },
       {
         model: model.User,
@@ -106,39 +121,44 @@ const getUserTweetsReply = async (req, res) => {
 }
 
 const getUserLikes = async (req, res) => {
-  const tweets = await model.Tweet.findAll({
-    attributes: {
+  try {
+    const tweets = await model.Tweet.findAll({
+      attributes: {
+        include: [
+          ['id', 'TweetId'],
+          [
+            sequelize.literal(
+              '(SELECT COUNT(id) FROM Replies WHERE Replies.TweetId = Tweet.id)'
+            ),
+            'replyCount',
+          ],
+          [
+            sequelize.literal(
+              '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
+            ),
+            'likeCount',
+          ],
+          [sequelize.literal('(SELECT 1 FROM Likes LIMIT 1)'), 'liked'],
+        ],
+        exclude: ['UserId'],
+      },
       include: [
-        ['id', 'TweetId'],
-        [
-          sequelize.literal(
-            '(SELECT COUNT(id) FROM Replies WHERE Replies.TweetId = Tweet.id)'
-          ),
-          'replyCount',
-        ],
-        [
-          sequelize.literal(
-            '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
-          ),
-          'likeCount',
-        ],
+        {
+          model: model.Like,
+          where: { UserId: req.params.id },
+          attributes: [],
+        },
+        {
+          model: model.User,
+          attributes: ['id', 'account', 'name', 'avatar'],
+        },
       ],
-      exclude: ['UserId'],
-    },
-    include: [
-      {
-        model: model.Like,
-        where: { UserId: req.params.id },
-        attributes: [],
-      },
-      {
-        model: model.User,
-        attributes: ['id', 'account', 'name', 'avatar'],
-      },
-    ],
-    order: [['createdAt', 'DESC']],
-  })
-  res.json(tweets)
+      order: [['createdAt', 'DESC']],
+    })
+    return res.json(tweets)
+  } catch (err) {
+    return res.status(507).json({ message: '資料庫錯誤' })
+  }
 }
 
 const getUserFollowings = async (req, res) => {
@@ -192,7 +212,7 @@ const getMyInfo = async (req, res) => {
     name: req.user.name,
     email: req.user.email,
     role: req.user.role,
-    avatart: req.user.avatar,
+    avatar: req.user.avatar,
   })
 }
 

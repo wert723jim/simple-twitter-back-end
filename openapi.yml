@@ -360,7 +360,7 @@ paths:
                   value:
                     message: 留言失敗，查無該貼文
   # users
-  /users/{id}:
+  /users/{user_id}:
     get:
       tags:
         - users
@@ -406,7 +406,7 @@ paths:
       responses:
         '200':
           description: 成功修改帳號
-  /users/{id}/followers:
+  /users/{user_id}/followers:
     get:
       tags:
         - users
@@ -433,7 +433,7 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/follower'
                     - $ref: '#/components/schemas/follower'
-  /users/{id}/followings:
+  /users/{user_id}/followings:
     get:
       tags:
         - users
@@ -460,7 +460,7 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/following'
                     - $ref: '#/components/schemas/following'
-  /users/{id}/likes:
+  /users/{user_id}/likes:
     get:
       tags:
         - users
@@ -487,7 +487,7 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/tweet'
                     - $ref: '#/components/schemas/tweet'
-  /users/{id}/replied_tweets:
+  /users/{user_id}/replied_tweets:
     get:
       tags:
         - users
@@ -512,9 +512,9 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/tweet'
-                    - $ref: '#/components/schemas/tweet'
-  /users/{id}/tweets:
+                    - $ref: '#/components/schemas/tweetWithReplies'
+                    - $ref: '#/components/schemas/tweetWithReplies'
+  /users/{user_id}/tweets:
     get:
       tags:
         - users
@@ -741,6 +741,23 @@ components:
       properties:
         liked:
           example: null
+
+    tweetWithReplies:
+      allOf:
+        - $ref: '#/components/schemas/tweet'
+      properties:
+        Replies:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/comment'
+              - $ref: '#/components/schemas/comment'
+
+    comment:
+      properties:
+        comment:
+          type: string
+          example: 'this is comment'
 
     userInfo:
       properties:

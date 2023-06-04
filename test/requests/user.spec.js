@@ -234,7 +234,8 @@ describe('# user requests', () => {
 
             expect(res.body).to.be.an('array')
             // 有回傳 Tweet1 的 comment 這筆資料
-            res.body[0].comment.should.equal('Tweet1 的 comment')
+            // res.body[0].comment.should.equal('Tweet1 的 comment')
+            res.body[0].Replies[0].comment.should.equal('Tweet1 的 comment')
 
             return done()
           })
