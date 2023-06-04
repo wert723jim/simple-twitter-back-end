@@ -3,7 +3,18 @@ const model = require('../models')
 const User = model.User
 
 const getAllUser = async (req, res) => {
-  const users = await User.findAll()
+  const users = await User.findAll({
+    attributes: [
+      'id',
+      'account',
+      'name',
+      'email',
+      'avatar',
+      'introduction',
+      'role',
+    ],
+    order: [['createdAt', 'DESC']],
+  })
   res.json(users)
 }
 

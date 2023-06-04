@@ -8,22 +8,35 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      userId: {
+      UserId: {
         type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id',
+        },
+        allowNull: false,
       },
-      tweetId: {
+      TweetId: {
         type: Sequelize.INTEGER,
+        references: {
+          model: 'Tweets',
+          key: 'id',
+        },
+        allowNull: false,
       },
       comment: {
         type: Sequelize.TEXT,
+        allowNull: false,
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: new Date(),
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: new Date(),
       },
     })
   },

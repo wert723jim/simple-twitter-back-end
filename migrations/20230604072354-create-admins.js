@@ -1,7 +1,9 @@
 'use strict'
+
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable('Users', {
+  async up(queryInterface, Sequelize) {
+    return queryInterface.createTable('Admins', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -15,6 +17,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       name: {
+        unique: true,
         type: Sequelize.STRING,
       },
       account: {
@@ -29,6 +32,7 @@ module.exports = {
       },
       role: {
         type: Sequelize.STRING,
+        defaultValue: 'admin',
       },
       refreshToken: {
         type: Sequelize.STRING,
@@ -36,14 +40,17 @@ module.exports = {
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: new Date(),
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
+        defaultValue: new Date(),
       },
     })
   },
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('Users')
+
+  async down(queryInterface, Sequelize) {
+    return queryInterface.dropTable('Admins')
   },
 }

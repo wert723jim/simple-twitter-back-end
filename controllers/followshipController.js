@@ -1,7 +1,11 @@
 const helpers = require('../_helpers')
-const Followship = require('../models')['Followship']
+const { Followship, User } = require('../models')
 
 const makeFollow = async (req, res) => {
+  const followingUser = await User.findByPk(req.body.id)
+  if (!followingUser) {
+    return res.status(400).json({ message: '追蹤失敗，該帳號不存在' })
+  }
   const user = helpers.getUser(req)
   await Followship.create({
     followerId: user.id,

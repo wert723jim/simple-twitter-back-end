@@ -9,18 +9,23 @@ servers:
     url: http://localhost:3000/api
 
 tags:
-  - name: account
+  - name: general
+    description: 通用
   - name: tweets
     description: 貼文
   - name: users
     description: 個人帳號
+  - name: followships
+    description: 追蹤
+  - name: admin
+    description: 管理員
 
 paths:
-  # account
+  # general
   /auth:
     post:
       tags:
-        - 'account'
+        - 'general'
       operationId: authToken
       summary: 一般登入
       requestBody:
@@ -52,12 +57,12 @@ paths:
   /logout:
     get:
       tags:
-        - account
+        - general
       operationId: handleLogout
       summary: 登出
       responses:
         '204':
-          description: 登出成功
+          description: 登出成功(無法 try it out)
           headers:
             set-cookie:
               description: 清空jwt
@@ -67,7 +72,7 @@ paths:
   /users:
     post:
       tags:
-        - account
+        - general
       operationId: addNewUser
       summary: 註冊帳號
       requestBody:
@@ -109,7 +114,7 @@ paths:
   /refresh:
     get:
       tags:
-        - account
+        - general
       operationId: getAccessToken
       summary: 刷新 access token
       parameters:
@@ -138,7 +143,7 @@ paths:
   /myInfo:
     get:
       tags:
-        - account
+        - general
       operationId: getMyInfo
       summary: 當前使用者資訊
       security:
@@ -354,7 +359,7 @@ paths:
                   summary: 查無該貼文
                   value:
                     message: 留言失敗，查無該貼文
-  #users
+  # users
   /users/{id}:
     get:
       tags:
@@ -536,6 +541,96 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/tweet'
                     - $ref: '#/components/schemas/tweet'
+  # followships
+  /followships:
+    post:
+      tags:
+        - followships
+      operationId: makeFollow
+      summary: 追蹤指定帳號
+      security:
+        - BearerAuth: []
+      requestBody:
+        description: 欲追蹤帳號的 id
+        content:
+          application/json:
+            schema:
+              type: object
+              example: { id: 2 }
+      responses:
+        '200':
+          description: 成功追蹤指定帳號
+        '400':
+          description: 查無該帳號
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '追蹤失敗，該帳號不存在' }
+  /followships/{following_id}:
+    delete:
+      tags:
+        - followships
+      operationId: unFollow
+      summary: 取消追蹤指定帳號
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: following_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+          description: 帳號 id
+      responses:
+        '200':
+          description: 成功取消追蹤指定帳號
+  /admin/users:
+    get:
+      tags:
+        - admin
+      operationId: getAllUser
+      summary: 獲取所有帳號資訊
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功獲取所有使用者資訊
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/fullUserInfo'
+                    - $ref: '#/components/schemas/fullUserInfo'
+  /admin/tweets/{tweet_id}:
+    delete:
+      tags:
+        - admin
+      operationId: deleteTweet
+      summary: 刪除指定貼文
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: tweet_id
+          schema:
+            type: integer
+            example: 1
+          required: true
+          description: 貼文 id
+      responses:
+        '200':
+          description: 成功刪除指定貼文
+        '400':
+          description: 查無該貼文
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '刪除失敗，查無該貼文' }
 
 components:
   securitySchemes:
@@ -543,7 +638,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: 'access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoiYWxsZW4iLCJ0eXBlIjoiYWNjZXNzIn0.qgjPY00G3kdMPVpuUVQrLzrcenZCB3LcVom1F8JjsLE'
+      description: 'access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoidXNlcjEiLCJ0eXBlIjoiYWNjZXNzIn0.j2QXHeg2HFQNMcmmTeuZjrjSxPe8whGsqrMBjGRz0xg'
 
   schemas:
     login_request:

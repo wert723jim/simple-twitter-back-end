@@ -159,7 +159,11 @@ const unlikeTweet = (req, res) => {
   }
 }
 
-const deleteTweet = (req, res) => {
+const deleteTweet = async (req, res) => {
+  const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
+  if (!foundTweet) {
+    return res.stauts(400).json({ message: '刪除失敗，查無該貼文' })
+  }
   model.Tweet.destroy({
     where: {
       id: req.params.tweet_id,
