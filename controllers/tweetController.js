@@ -95,8 +95,10 @@ const getTweetById = async (req, res) => {
       },
     ],
   })
+  if (!tweet) {
+    return res.status(400).json({ message: '貼文不存在' })
+  }
   res.json(tweet)
-  // TODO 若沒有該貼文id，則返回null，看是否需要優化
 }
 
 const addReply = async (req, res) => {
@@ -104,11 +106,9 @@ const addReply = async (req, res) => {
     return res.status(400).json({ message: '請填入留言內容' })
   }
   const user = helpers.getUser(req)
-  const tweetCount = await model.Tweet.count({
-    where: { id: req.params.tweet_id },
-  })
-  if (tweetCount === 0) {
-    return res.status(400).json({ message: '留言失敗，查無該貼文' })
+  const tweetCount = await model.Tweet.findByPk(req.params.tweet_id)
+  if (!tweetCount) {
+    return res.status(400).json({ message: '貼文不存在' })
   }
   await model.Reply.create({
     UserId: user.id,
@@ -119,6 +119,10 @@ const addReply = async (req, res) => {
 }
 
 const getAllReplies = async (req, res) => {
+  const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
+  if (!foundTweet) {
+    return res.status(400).json({ message: '貼文不存在' })
+  }
   const replies = await model.Reply.findAll({
     where: {
       tweetId: req.params.tweet_id,
@@ -135,11 +139,13 @@ const getAllReplies = async (req, res) => {
     order: [['createdAt', 'DESC']],
   })
   res.json(replies)
-  // TODO 若沒有該貼文id，則返回[]，看是否需要優化
 }
 
 const likeTweet = async (req, res) => {
-  // TODO 對貼文關聯做優化，若沒有該貼文不能按讚
+  const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
+  if (!foundTweet) {
+    return res.status(400).json({ message: '貼文不存在' })
+  }
   const user = helpers.getUser(req)
   try {
     const [row, created] = await model.Like.findOrCreate({
@@ -157,8 +163,11 @@ const likeTweet = async (req, res) => {
   }
 }
 
-const unlikeTweet = (req, res) => {
-  // TODO 若本來就沒有讚，要如何優化處理
+const unlikeTweet = async (req, res) => {
+  const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
+  if (!foundTweet) {
+    return res.status(400).json({ message: '貼文不存在' })
+  }
   const user = helpers.getUser(req)
   try {
     model.Like.destroy({

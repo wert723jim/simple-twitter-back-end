@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
       avatar: DataTypes.STRING,
       introduction: DataTypes.TEXT,
       refreshToken: DataTypes.STRING,
-      // cover: DataTypes.STRING,
+      cover: DataTypes.STRING,
       role: {
         type: DataTypes.STRING,
         defaultValue: 'user',

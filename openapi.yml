@@ -109,8 +109,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                example: { message: 資料庫請求錯誤 }
+                $ref: '#/components/schemas/dbError'
   /refresh:
     get:
       tags:
@@ -210,8 +209,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                example: { message: 資料庫請求錯誤 }
+                $ref: '#/components/schemas/dbError'
   /tweets/{tweet_id}:
     get:
       tags:
@@ -236,6 +234,13 @@ paths:
               schema:
                 type: object
                 $ref: '#/components/schemas/tweet'
+        '400':
+          description: 貼文不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '貼文不存在' }
   /tweets/{tweet_id}/like:
     post:
       tags:
@@ -255,6 +260,13 @@ paths:
       responses:
         '200':
           description: 成功按讚
+        '400':
+          description: 貼文不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 貼文不存在 }
         '422':
           description: 按讚失敗，已經對該貼文按過讚了
           content:
@@ -267,8 +279,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                example: { message: 資料庫請求錯誤 }
+                $ref: '#/components/schemas/dbError'
   /tweets/{tweet_id}/unlike:
     post:
       tags:
@@ -288,13 +299,19 @@ paths:
       responses:
         '200':
           description: 成功對貼文收回讚（硬刪除）
+        '400':
+          description: 貼文不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 貼文不存在 }
         '507':
           description: 資料庫請求錯誤
           content:
             application/json:
               schema:
-                type: object
-                example: { message: 資料庫請求錯誤 }
+                $ref: '#/components/schemas/dbError'
   /tweets/{tweet_id}/replies:
     get:
       tags:
@@ -322,6 +339,13 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/reply'
                     - $ref: '#/components/schemas/reply'
+        '400':
+          description: 貼文不存在
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: 貼文不存在 }
     post:
       tags:
         - tweets
@@ -356,9 +380,9 @@ paths:
                   value:
                     message: 請填入留言內容
                 unknownTweetError:
-                  summary: 查無該貼文
+                  summary: 貼文不存在
                   value:
-                    message: 留言失敗，查無該貼文
+                    message: 貼文不存在
   # users
   /users/{user_id}:
     get:
@@ -375,7 +399,7 @@ paths:
           schema:
             type: string
             default: 20
-          description: 個人 id
+          description: 帳號 id
       responses:
         '200':
           description: 成功獲取帳號資訊
@@ -388,8 +412,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                example: { message: '查無此帳號' }
+                $ref: '#/components/schemas/noAccountError'
     put:
       tags:
         - users
@@ -397,15 +420,82 @@ paths:
       summary: 更新帳號資訊
       security:
         - BearerAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            default: 20
+          description: 自身帳號 id
       requestBody:
-        description: 修改帳號的請求（待討論）
+        description: 修改帳號的請求
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/myInfo'
+            examples:
+              editNameAndIntro:
+                summary: 更新名稱 & 自我介紹 & 大頭貼 & 背景圖
+                value:
+                  name: new name
+                  introduction: new intro
+                  avatar: new avatar
+                  cover: new cover
+              editAll:
+                summary: 更新帳號 & 名稱 & 信箱，並輸入舊密碼
+                value:
+                  account: new account
+                  name: new name
+                  email: new email
+                  password: old password
+                  checkPassword: old password
+
       responses:
         '200':
           description: 成功修改帳號
+          content:
+            application/json:
+              examples:
+                notEditAccount:
+                  summary: 未修改account欄位的值
+                editAccount:
+                  summary: 修改account欄位的值
+                  value:
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50IjoidXNlcjEiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNjg1OTUxMTgwLCJleHAiOjE2ODU5NTEyMTB9.7CfezEjXoCmBwzqwXNdI7Q6a39xfeRlpgssBPZswV8g
+
+        '400':
+          description: 更新失敗
+          content:
+            application/json:
+              examples:
+                editSelfError:
+                  summary: 帳號id不是自己
+                  value:
+                    message: 只能修改自己的帳號資訊
+                checkPasswordError:
+                  summary: 確認密碼和密碼不一致
+                  value:
+                    message: 密碼和確認密碼不一致
+                passwordError:
+                  summary: 密碼驗證錯誤
+                  value:
+                    message: 密碼有誤
+                dupAccountError:
+                  summary: 帳號已經被使用過了
+                  value:
+                    message: 帳號已經被使用過了
+                dupNameError:
+                  summary: 名稱已經被使用過了
+                  value:
+                    message: 名稱已經被使用過了
+        '507':
+          description: 資料庫請求錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dbError'
+
   /users/{user_id}/followers:
     get:
       tags:
@@ -433,6 +523,12 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/follower'
                     - $ref: '#/components/schemas/follower'
+        '400':
+          description: 帳號不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/noAccountError'
   /users/{user_id}/followings:
     get:
       tags:
@@ -460,6 +556,12 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/following'
                     - $ref: '#/components/schemas/following'
+        '400':
+          description: 帳號不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/noAccountError'
   /users/{user_id}/likes:
     get:
       tags:
@@ -487,6 +589,12 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/tweet'
                     - $ref: '#/components/schemas/tweet'
+        '400':
+          description: 帳號不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/noAccountError'
   /users/{user_id}/replied_tweets:
     get:
       tags:
@@ -514,6 +622,12 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/tweetWithReplies'
                     - $ref: '#/components/schemas/tweetWithReplies'
+        '400':
+          description: 帳號不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/noAccountError'
   /users/{user_id}/tweets:
     get:
       tags:
@@ -541,6 +655,12 @@ paths:
                   oneOf:
                     - $ref: '#/components/schemas/tweet'
                     - $ref: '#/components/schemas/tweet'
+        '400':
+          description: 帳號不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/noAccountError'
   # followships
   /followships:
     post:
@@ -625,7 +745,7 @@ paths:
         '200':
           description: 成功刪除指定貼文
         '400':
-          description: 查無該貼文
+          description: 貼文不存在
           content:
             application/json:
               schema:
@@ -835,3 +955,21 @@ components:
         Followings.avatar:
           type: string
           example: null
+
+    noAccountError:
+      properties:
+        message:
+          type: string
+          example: 帳號不存在
+
+    noTweetError:
+      properties:
+        message:
+          type: string
+          example: 貼文不存在
+
+    dbError:
+      properties:
+        message:
+          type: string
+          example: 資料庫請求錯誤
