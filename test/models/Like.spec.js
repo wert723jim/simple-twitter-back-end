@@ -15,13 +15,23 @@ describe('# Like Model', () => {
   const LikeFactory = proxyquire('../../models/like', {
     sequelize: Sequelize,
   })
+  // const UserFactory = proxyquire('../../models/user', {
+  //   sequelize: Sequelize,
+  // })
+  // const TweetFactory = proxyquire('../../models/tweet', {
+  //   sequelize: Sequelize,
+  // })
 
   // 宣告 Like 變數
   let Like
+  // let User
+  // let Tweet
 
   before(() => {
     // 賦予 Like 值，成為 Like Model 的 instance
     Like = LikeFactory(sequelize, DataTypes)
+    // User = UserFactory(sequelize, DataTypes)
+    // Tweet = TweetFactory(sequelize, DataTypes)
   })
 
   // 清除 init 過的資料
@@ -62,10 +72,30 @@ describe('# Like Model', () => {
   // 檢查 model 的新增、修改、刪除、更新
   context('action', () => {
     let data = null
+    let UserId
+    let TweetId
+
+    before(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      const res = await db.User.create({})
+      UserId = res.id
+      const tRes = await db.Tweet.create({ UserId })
+      TweetId = tRes.id
+      await db.Like.destroy({ where: {}, truncate: true, force: true })
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
+      })
+    })
 
     // 檢查 db.Like 是否真的可以新增一筆資料
     it('create', (done) => {
-      db.Like.create({}).then((like) => {
+      db.Like.create({
+        UserId,
+        TweetId,
+      }).then((like) => {
         data = like
         done()
       })
@@ -93,6 +123,19 @@ describe('# Like Model', () => {
           expect(like).to.be.equal(null)
           done()
         })
+      })
+    })
+
+    after(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      await db.User.destroy({ where: {}, truncate: true, force: true })
+      await db.Tweet.destroy({ where: {}, truncate: true, force: true })
+      await db.Like.destroy({ where: {}, truncate: true, force: true })
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
       })
     })
   })

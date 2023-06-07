@@ -70,9 +70,23 @@ describe('# Tweet Model', () => {
   // // 檢查 model 的新增、修改、刪除、更新
   context('action', () => {
     let data = null
+    let UserId
+
+    before(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      const res = await db.User.create({})
+      UserId = res.id
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
+      })
+    })
+
     // 檢查 db.Tweet 是否真的可以新增一筆資料
     it('create', (done) => {
-      db.Tweet.create({ UserId: 1, description: 'hi' }).then((tweet) => {
+      db.Tweet.create({ UserId, description: 'hi' }).then((tweet) => {
         data = tweet
         done()
       })
@@ -100,6 +114,18 @@ describe('# Tweet Model', () => {
           expect(tweet).to.be.equal(null)
           done()
         })
+      })
+    })
+
+    after(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      await db.User.destroy({ where: {}, truncate: true, force: true })
+      await db.Tweet.destroy({ where: {}, truncate: true, force: true })
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
       })
     })
   })

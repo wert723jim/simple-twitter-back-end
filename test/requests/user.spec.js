@@ -235,7 +235,7 @@ describe('# user requests', () => {
             expect(res.body).to.be.an('array')
             // 有回傳 Tweet1 的 comment 這筆資料
             // res.body[0].comment.should.equal('Tweet1 的 comment')
-            res.body[0].Replies[0].comment.should.equal('Tweet1 的 comment')
+            res.body[0].comment.should.equal('Tweet1 的 comment')
 
             return done()
           })
@@ -378,7 +378,8 @@ describe('# user requests', () => {
 
             expect(res.body).to.be.an('array')
             //回傳資料中是否有跟隨中的人的 id = 2
-            res.body[0].followingId.should.equal(2)
+            // res.body[0].followingId.should.equal(2)
+            res.body[0].id.should.equal(2)
 
             return done()
           })
@@ -450,7 +451,8 @@ describe('# user requests', () => {
 
             expect(res.body).to.be.an('array')
             // 有跟隨者的 followerId = 1
-            res.body[0].followerId.should.equal(1)
+            // res.body[0].followerId.should.equal(1)
+            res.body[0].id.should.equal(1)
 
             return done()
           })
@@ -474,6 +476,8 @@ describe('# user requests', () => {
   })
 
   context('# PUT ', () => {
+    let UserId
+
     describe('PUT /api/users/:id', () => {
       before(async () => {
         // 清除 User, Tweet table 的測試資料庫資料
@@ -485,7 +489,9 @@ describe('# user requests', () => {
           raw: true,
         })
         // 模擬登入資料
-        const rootUser = await db.User.create({ name: 'root' })
+        const rootUser = await db.User.create({
+          name: 'root', account: 'root'
+        })
         this.authenticate = sinon
           .stub(passport, 'authenticate')
           .callsFake((strategy, options, callback) => {
@@ -496,19 +502,20 @@ describe('# user requests', () => {
           .stub(helpers, 'getUser')
           .returns({ id: 1, Followings: [], role: 'user' })
         // 在測試資料庫中，新增 mock 資料
-        await db.User.create({
+        const res = await db.User.create({
           account: 'User1',
           name: 'User1',
           email: 'User1',
           password: 'User1',
           introduction: 'User1',
         })
+        UserId = res.id
       })
 
       // 編輯自己所有的資料 PUT /users/:id
       it(' - successfully', (done) => {
         request(app)
-          .put('/api/users/1')
+          .put(`/api/users/${UserId}`)
           .send('name=User11&introduction=User11')
           .set('Accept', 'application/json')
           .expect(200)

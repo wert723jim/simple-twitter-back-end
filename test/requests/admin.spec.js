@@ -94,7 +94,7 @@ describe('# admin requests', () => {
           raw: true,
         })
         // 模擬登入資料
-        const rootUser = await db.User.create({ name: 'root' })
+        const rootUser = await db.User.create({ name: 'root', role: 'admin' })
         this.authenticate = sinon
           .stub(passport, 'authenticate')
           .callsFake((strategy, options, callback) => {

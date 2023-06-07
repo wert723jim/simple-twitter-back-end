@@ -62,9 +62,31 @@ describe('# Reply Model', () => {
   // 檢查 model 的新增、修改、刪除、更新
   context('action', () => {
     let data = null
+    let UserId
+    let TweetId
+
+    before(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      const res = await db.User.create({})
+      UserId = res.id
+      const tRes = await db.Tweet.create({ UserId })
+      TweetId = tRes.id
+      await db.Reply.destroy({ where: {}, truncate: true, force: true })
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
+      })
+    })
+
     // 檢查 db.Reply 是否真的可以新增一筆資料
     it('create', (done) => {
-      db.Reply.create({}).then((reply) => {
+      db.Reply.create({
+        UserId,
+        TweetId,
+        comment: 'comment',
+      }).then((reply) => {
         data = reply
         done()
       })
@@ -92,6 +114,19 @@ describe('# Reply Model', () => {
           expect(reply).to.be.equal(null)
           done()
         })
+      })
+    })
+
+    after(async () => {
+      // 清除測試資料庫資料
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, {
+        raw: true,
+      })
+      await db.User.destroy({ where: {}, truncate: true, force: true })
+      await db.Tweet.destroy({ where: {}, truncate: true, force: true })
+      await db.Reply.destroy({ where: {}, truncate: true, force: true })
+      await db.sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, {
+        raw: true,
       })
     })
   })

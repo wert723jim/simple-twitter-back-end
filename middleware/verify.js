@@ -1,6 +1,7 @@
 const passport = require('../config/passport')
 const jwt = require('jsonwebtoken')
 const User = require('../models')['User']
+const { getUser } = require('../_helpers')
 
 const verifyUserExist = (req, res, next) => {
   passport.authenticate(
@@ -71,7 +72,8 @@ const verifyRefreshToken = async (req, res, next) => {
 }
 
 const verifyAdminRole = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  const user = getUser(req)
+  if (user.role !== 'admin') {
     return res.status(401).json({ message: '權限不足' })
   }
   next()

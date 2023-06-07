@@ -4,9 +4,9 @@ const bcrypt = require('bcryptjs')
 const User = model.User
 const { Op } = require('sequelize')
 const jwt = require('jsonwebtoken')
+const { getUser } = require('../_helpers')
 
 const getAllUser = async (req, res) => {
-  console.log(res.user)
   const users = await User.findAll({
     raw: true,
     nest: true,
@@ -271,7 +271,8 @@ const getUserFollowers = async (req, res) => {
 
 const updateUserById = async (req, res) => {
   // 只能修改自己的帳號資訊
-  if (req.params.id.toString() !== req.user.id.toString()) {
+  const user = getUser(req)
+  if (req.params.id.toString() !== user.id.toString()) {
     return res.status(400).json({ message: '只能修改自己的帳號資訊' })
   }
   const foundUser = await User.findByPk(req.params.id)
@@ -286,12 +287,13 @@ const updateUserById = async (req, res) => {
     delete req.body.password
     delete req.body.checkPassword
   } else {
-    req.body.account = req.user.account
+    req.body.account = user.account
   }
+
   // account & name 不能重複
   const duplicateUser = await User.findOne({
     where: {
-      id: { [Op.not]: req.user.id },
+      id: { [Op.not]: user.id },
       [Op.or]: [{ account: req.body.account }, { name: req.body.name }],
     },
   })
@@ -303,9 +305,9 @@ const updateUserById = async (req, res) => {
 
   // 若更新account，要重新給jwt
   let accessToken
-  if (foundUser.account !== req.body.account) {
+  if (foundUser.account !== req.body.account && !user.name === 'root') {
     const refreshToken = jwt.sign(
-      { account: req.user.account, type: 'refresh' },
+      { account: user.account, type: 'refresh' },
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: '1d' }
     )
@@ -318,7 +320,7 @@ const updateUserById = async (req, res) => {
     foundUser.refreshToken = refreshToken
 
     accessToken = jwt.sign(
-      { account: req.user.account, type: 'access' },
+      { account: user.account, type: 'access' },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: '30s' }
     )
@@ -334,18 +336,20 @@ const updateUserById = async (req, res) => {
     }
     return res.sendStatus(200)
   } catch (err) {
+    console.log(err)
     return res.status(507).json({ message: '資料庫請求錯誤' })
   }
 }
 
 const getMyInfo = async (req, res) => {
+  const user = getUser(req)
   res.json({
-    id: req.user.id,
-    account: req.user.account,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    avatar: req.user.avatar,
+    id: user.id,
+    account: user.account,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar,
   })
 }
 
