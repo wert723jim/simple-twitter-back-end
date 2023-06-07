@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
       })
-      Tweet.belongsTo(models.User, { foreignKey: 'UserId' })
+      Tweet.belongsTo(models.User, { foreignKey: 'UserId'})
     }
   }
   Tweet.init(

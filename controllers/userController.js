@@ -6,19 +6,59 @@ const { Op } = require('sequelize')
 const jwt = require('jsonwebtoken')
 
 const getAllUser = async (req, res) => {
+  console.log(res.user)
   const users = await User.findAll({
+    raw: true,
+    nest: true,
     attributes: [
       'id',
       'account',
       'name',
-      'email',
       'avatar',
-      'introduction',
-      'role',
+      'cover',
+      [
+        sequelize.literal(
+          `(SELECT 1 FROM Followships WHERE Followships.followerId = '${
+            req.user.role === 'user' ? req.user.id : 0
+          }' AND Followships.followingId = User.id)`
+        ),
+        'followed',
+      ],
+      [
+        sequelize.literal(
+          '(SELECT COUNT(*) FROM Tweets WHERE Tweets.UserId = User.id)'
+        ),
+        'tweet_count',
+      ],
+      [sequelize.fn('COUNT', sequelize.col('Tweets.Likes.id')), 'like_count'],
+      [
+        sequelize.literal(
+          '(SELECT COUNT(*) FROM Followships WHERE Followships.followerId = User.id)'
+        ),
+        'following_count',
+      ],
+      [
+        sequelize.literal(
+          '(SELECT COUNT(*) FROM Followships WHERE Followships.followingId = User.id)'
+        ),
+        'follower_count',
+      ],
+    ],
+    include: [
+      {
+        model: model.Tweet,
+        attributes: ['id'],
+        include: { model: model.Like },
+      },
     ],
     order: [['createdAt', 'DESC']],
+    group: ['id'],
   })
-  res.json(users)
+  const result = users.map((user) => {
+    delete user.Tweets
+    return user
+  })
+  res.json(result)
 }
 
 const getUserById = async (req, res) => {
@@ -34,6 +74,13 @@ const getUserById = async (req, res) => {
       'role',
       'introduction',
       'avatar',
+      'cover',
+      [
+        sequelize.literal(
+          `(SELECT 1 FROM Followships WHERE Followships.followerId = '${req.user.id}' AND Followships.followingId = '${req.params.id}')`
+        ),
+        'followed',
+      ],
     ],
   })
   if (!user) {
@@ -90,44 +137,41 @@ const getUserTweetsReply = async (req, res) => {
   if (!foundUser) {
     return res.status(400).json({ message: '帳號不存在' })
   }
-  const tweets = await model.Tweet.findAll({
-    attributes: {
-      include: [
-        [
-          sequelize.literal(
-            '(SELECT COUNT(id) FROM Replies WHERE Replies.TweetId = Tweet.id)'
-          ),
-          'replyCount',
-        ],
-        [
-          sequelize.literal(
-            '(SELECT COUNT(id) FROM Likes WHERE Likes.TweetId = Tweet.id)'
-          ),
-          'likeCount',
-        ],
-        [
-          sequelize.literal(
-            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
-          ),
-          'liked',
-        ],
-      ],
-      exclude: ['UserId'],
+  const replis = await model.Reply.findAll({
+    raw: true,
+    nest: true,
+    where: {
+      UserId: userId,
     },
+    attributes: [
+      'id',
+      'TweetId',
+      'comment',
+      'createdAt',
+      [sequelize.col('Tweet.User.id'), 'tweet_user.id'],
+      [sequelize.col('Tweet.User.account'), 'tweet_user.account'],
+      [sequelize.col('Tweet.User.name'), 'tweet_user.name'],
+      [sequelize.col('Tweet.User.avatar'), 'tweet_user.avatar'],
+    ],
     include: [
       {
-        model: model.Reply,
-        where: { UserId: userId },
-        attributes: ['comment'],
+        model: model.Tweet,
+        attributes: [],
+        include: {
+          model: model.User,
+          attributes: [],
+        },
       },
       {
         model: model.User,
+        as: 'reply_user',
         attributes: ['id', 'account', 'name', 'avatar'],
       },
     ],
     order: [['createdAt', 'DESC']],
   })
-  res.json(tweets)
+
+  return res.json(replis)
 }
 
 const getUserLikes = async (req, res) => {
@@ -180,19 +224,24 @@ const getUserFollowings = async (req, res) => {
   if (!foundUser) {
     return res.status(400).json({ message: '帳號不存在' })
   }
-  const followship = await model.Followship.findAll({
-    raw: true,
+  const followingUsers = await model.Followship.findAll({
     where: {
       followerId: req.params.id,
     },
-    attributes: ['followingId'],
+    attributes: [
+      ['followingId', 'id'],
+      [sequelize.col('Followings.account'), 'account'],
+      [sequelize.col('Followings.name'), 'name'],
+      [sequelize.col('Followings.avatar'), 'avatar'],
+      [sequelize.col('Followings.introduction'), 'introduction'],
+    ],
     include: {
       model: model.User,
       as: 'Followings',
-      attributes: ['account', 'name', 'avatar'],
+      attributes: [],
     },
   })
-  res.json(followship)
+  return res.json(followingUsers)
 }
 
 const getUserFollowers = async (req, res) => {
@@ -200,19 +249,24 @@ const getUserFollowers = async (req, res) => {
   if (!foundUser) {
     return res.status(400).json({ message: '帳號不存在' })
   }
-  const followship = await model.Followship.findAll({
-    raw: true,
+  const followerUsers = await model.Followship.findAll({
     where: {
       followingId: req.params.id,
     },
-    attributes: ['followerId'],
+    attributes: [
+      ['followerId', 'id'],
+      [sequelize.col('Followers.account'), 'account'],
+      [sequelize.col('Followers.name'), 'name'],
+      [sequelize.col('Followers.avatar'), 'avatar'],
+      [sequelize.col('Followers.introduction'), 'introduction'],
+    ],
     include: {
       model: model.User,
       as: 'Followers',
-      attributes: ['account', 'name', 'avatar'],
+      attributes: [],
     },
   })
-  res.json(followship)
+  res.json(followerUsers)
 }
 
 const updateUserById = async (req, res) => {

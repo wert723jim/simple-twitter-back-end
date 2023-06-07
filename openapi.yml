@@ -33,7 +33,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/login_request'
-        # required: true
       responses:
         '200':
           description: 授權成功，返回 user info && access token
@@ -54,6 +53,38 @@ paths:
               schema:
                 type: object
                 example: { message: '帳號或密碼有誤' }
+  /auth/admin:
+    post:
+      tags:
+        - 'general'
+      operationId: authToken
+      summary: 管理員登入
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/admin_login_request'
+      responses:
+        '200':
+          description: 授權成功，返回 user info && access token
+          headers:
+            set-cookie:
+              description: jwt=refreshToken 設置在cookie中
+              schema:
+                type: string
+                example: jwt={refresh token}; Max-Age=86400; Path=/; Expires={tomorrow}; HttpOnly; Secure; SameSite=None
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userInfo_accessToken'
+        '400':
+          description: 授權失敗
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '帳號或密碼有誤' }
+
   /logout:
     get:
       tags:
@@ -190,7 +221,12 @@ paths:
               example: { description: 'this is new post' }
       responses:
         '200':
-          description: 成功發送貼文
+          description: 成功發送貼文，回傳新增貼文的 id
+          content:
+            application/json:
+              schema:
+                type: string
+                example: { tweet_id: 100 }
         '400':
           description: 請求錯誤
           content:
@@ -521,8 +557,8 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/follower'
-                    - $ref: '#/components/schemas/follower'
+                    - $ref: '#/components/schemas/userInfoWithIntro'
+                    - $ref: '#/components/schemas/userInfoWithIntro'
         '400':
           description: 帳號不存在
           content:
@@ -554,8 +590,8 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/following'
-                    - $ref: '#/components/schemas/following'
+                    - $ref: '#/components/schemas/userInfoWithIntro'
+                    - $ref: '#/components/schemas/userInfoWithIntro'
         '400':
           description: 帳號不存在
           content:
@@ -620,8 +656,8 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/tweetWithReplies'
-                    - $ref: '#/components/schemas/tweetWithReplies'
+                    - $ref: '#/components/schemas/replyWithTweetUser'
+                    - $ref: '#/components/schemas/replyWithTweetUser'
         '400':
           description: 帳號不存在
           content:
@@ -681,12 +717,19 @@ paths:
         '200':
           description: 成功追蹤指定帳號
         '400':
-          description: 查無該帳號
+          description: 請求錯誤
           content:
             application/json:
-              schema:
-                type: object
-                example: { message: '追蹤失敗，該帳號不存在' }
+              examples:
+                accountNotFoundError:
+                  summary: 帳號不存在
+                  value:
+                    message: 追蹤失敗，該帳號不存在
+                cantFollowSelfError:
+                  summary: 無法追蹤自己
+                  value:
+                    message: 無法追蹤自己
+
   /followships/{following_id}:
     delete:
       tags:
@@ -723,14 +766,14 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/fullUserInfo'
-                    - $ref: '#/components/schemas/fullUserInfo'
+                    - $ref: '#/components/schemas/adminUserInfo'
+                    - $ref: '#/components/schemas/adminUserInfo'
   /admin/tweets/{tweet_id}:
     delete:
       tags:
         - admin
       operationId: deleteTweet
-      summary: 刪除指定貼文
+      summary: 管理員刪除指定貼文
       security:
         - BearerAuth: []
       parameters:
@@ -751,6 +794,13 @@ paths:
               schema:
                 type: object
                 example: { message: '刪除失敗，查無該貼文' }
+        '401':
+          description: 權限不足
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { message: '權限不足' }
 
 components:
   securitySchemes:
@@ -774,6 +824,17 @@ components:
       required:
         - account
         - password
+
+    admin_login_request:
+      properties:
+        account:
+          type: string
+          description: 使用者帳號
+          example: 'root'
+        password:
+          type: string
+          description: 使用者密碼
+          example: '12345678'
 
     myInfo:
       properties:
@@ -862,17 +923,6 @@ components:
         liked:
           example: null
 
-    tweetWithReplies:
-      allOf:
-        - $ref: '#/components/schemas/tweet'
-      properties:
-        Replies:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/comment'
-              - $ref: '#/components/schemas/comment'
-
     comment:
       properties:
         comment:
@@ -894,6 +944,14 @@ components:
           type: string
           example: null
 
+    userInfoWithIntro:
+      allOf:
+        - $ref: '#/components/schemas/userInfo'
+      properties:
+        introduction:
+          type: string
+          example: this is intro
+
     reply:
       properties:
         id:
@@ -908,7 +966,15 @@ components:
         createdAt:
           type: string
           example: '2023-06-01T13:30:00.000Z'
-        User:
+        reply_user:
+          type: object
+          $ref: '#/components/schemas/userInfo'
+
+    replyWithTweetUser:
+      allOf:
+        - $ref: '#/components/schemas/reply'
+      properties:
+        tweet_user:
           type: object
           $ref: '#/components/schemas/userInfo'
 
@@ -925,6 +991,35 @@ components:
         introduction:
           type: string
           example: introduction of user
+        followed:
+          type: boolean
+          example: 1
+        cover:
+          type: string
+          example: null
+
+    adminUserInfo:
+      allOf:
+        - $ref: '#/components/schemas/userInfo'
+      properties:
+        cover:
+          type: string
+          example: null
+        followed:
+          type: boolean
+          example: 1
+        tweet_count:
+          type: number
+          example: 10
+        like_count:
+          type: number
+          example: 1
+        following_count:
+          type: number
+          example: 0
+        follower_count:
+          type: number
+          example: 1
 
     follower:
       properties:
@@ -938,21 +1033,6 @@ components:
           type: string
           example: 'user1'
         Followers.avatar:
-          type: string
-          example: null
-
-    following:
-      properties:
-        followingId:
-          type: integer
-          example: 2
-        Followings.account:
-          type: string
-          example: 'user1'
-        Followings.name:
-          type: string
-          example: 'user1'
-        Followings.avatar:
           type: string
           example: null
 

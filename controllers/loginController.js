@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const User = require('../models')['User']
+const { User, Admin } = require('../models')
 
 const authToken = async (req, res) => {
   // make refresh token && save in cookie
@@ -8,7 +8,11 @@ const authToken = async (req, res) => {
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: '1d' }
   )
-  const user = await User.findOne({ where: { account: req.user.account } })
+  let user
+  user = await User.findOne({ where: { account: req.user.account } })
+  if (!user) {
+    user = await Admin.findOne({ where: { account: req.user.account } })
+  }
   user.refreshToken = refreshToken
   await user.save()
   res.cookie('jwt', refreshToken, {
@@ -24,7 +28,6 @@ const authToken = async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: '30s' }
   )
-  console.log('run login')
   res.json({
     id: user.id,
     account: user.account,
@@ -39,7 +42,11 @@ const authToken = async (req, res) => {
 const handleLogout = async (req, res) => {
   const refreshToken = req.cookies.jwt
   if (refreshToken) {
-    const user = await User.findOne({ where: { refreshToken } })
+    let user
+    user = await User.findOne({ where: { refreshToken } })
+    if (!user) {
+      user = await Admin.findOne({ where: { refreshToken } })
+    }
     user.refreshToken = null
     await user.save()
   }

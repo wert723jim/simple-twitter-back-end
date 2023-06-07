@@ -1,10 +1,11 @@
 const router = require('express').Router()
 const loginController = require('../../controllers/loginController')
-const { verifyUserExist } = require('../../middleware/verify')
+const { verifyUserExist, verifyAdminExist } = require('../../middleware/verify')
 const passport = require('passport')
 const { getUser } = require('../../_helpers')
 
 router.post('/', verifyUserExist, loginController.authToken)
+router.post('/admin', verifyAdminExist, loginController.authToken)
 router.get(
   '/google/callback',
   passport.authenticate('google', { session: false }),

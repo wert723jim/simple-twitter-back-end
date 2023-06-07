@@ -2,7 +2,7 @@ const helpers = require('../_helpers')
 const model = require('../models')
 const sequelize = require('sequelize')
 
-const addTweet = (req, res) => {
+const addTweet = async (req, res) => {
   if (!req.body.description) {
     return res.status(400).json({ message: '請填入貼文內容' })
   }
@@ -11,11 +11,11 @@ const addTweet = (req, res) => {
   }
   try {
     const user = helpers.getUser(req)
-    model.Tweet.create({
+    const result = await model.Tweet.create({
       UserId: user.id,
       description: req.body.description,
     })
-    res.sendStatus(200)
+    return res.json({tweet_id: result.id})
   } catch (err) {
     console.log(err)
     res.status(507).json({ message: '資料庫請求錯誤' })
@@ -125,7 +125,7 @@ const getAllReplies = async (req, res) => {
   }
   const replies = await model.Reply.findAll({
     where: {
-      tweetId: req.params.tweet_id,
+      TweetId: req.params.tweet_id,
     },
     attributes: {
       exclude: ['UserId', 'updatedAt'],
@@ -133,6 +133,7 @@ const getAllReplies = async (req, res) => {
     include: [
       {
         model: model.User,
+        as: 'reply_user',
         attributes: ['id', 'account', 'name', 'avatar'],
       },
     ],
