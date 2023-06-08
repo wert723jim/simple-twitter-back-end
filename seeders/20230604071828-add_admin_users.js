@@ -60,7 +60,10 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Admins', null, {}) 
+    const { sequelize } = queryInterface
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true })
+    await queryInterface.bulkDelete('Admins', null, {})
     await queryInterface.bulkDelete('Users', null, {})
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, { raw: true })
   },
 }

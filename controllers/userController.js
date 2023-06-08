@@ -196,7 +196,7 @@ const getUserLikes = async (req, res) => {
             ),
             'likeCount',
           ],
-          [sequelize.literal('(SELECT 1 FROM Likes LIMIT 1)'), 'liked'],
+          [sequelize.literal('(SELECT 1)'), 'liked'],
         ],
         exclude: ['UserId'],
       },
@@ -234,6 +234,7 @@ const getUserFollowings = async (req, res) => {
       [sequelize.col('Followings.name'), 'name'],
       [sequelize.col('Followings.avatar'), 'avatar'],
       [sequelize.col('Followings.introduction'), 'introduction'],
+      [sequelize.literal('(SELECT 1)'), 'followed'],
     ],
     include: {
       model: model.User,
@@ -259,6 +260,12 @@ const getUserFollowers = async (req, res) => {
       [sequelize.col('Followers.name'), 'name'],
       [sequelize.col('Followers.avatar'), 'avatar'],
       [sequelize.col('Followers.introduction'), 'introduction'],
+      [
+        sequelize.literal(
+          `(SELECT 1 FROM Followships WHERE Followships.followingId = Followers.id AND Followships.followerId = '${req.user.id}'  LIMIT 1)`
+        ),
+        'followed',
+      ],
     ],
     include: {
       model: model.User,

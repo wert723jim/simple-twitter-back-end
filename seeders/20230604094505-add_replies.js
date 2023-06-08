@@ -41,6 +41,9 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Replies', null, {})
+    const { sequelize } = queryInterface
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 0', null, { raw: true })
+    await queryInterface.bulkDelete('Replies', null, { force: true })
+    await sequelize.query('SET FOREIGN_KEY_CHECKS = 1', null, { raw: true })
   },
 }
