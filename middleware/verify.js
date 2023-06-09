@@ -2,6 +2,7 @@ const passport = require('../config/passport')
 const jwt = require('jsonwebtoken')
 const User = require('../models')['User']
 const { getUser } = require('../_helpers')
+const Admin = require('../models')['Admin']
 
 const verifyUserExist = (req, res, next) => {
   passport.authenticate(
