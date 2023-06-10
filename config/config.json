@@ -6,6 +6,13 @@
     "host": "127.0.0.1",
     "dialect": "mysql"
   },
+  "remote": {
+    "username": "sql12624975",
+    "password": "VC3adthm3A",
+    "database": "sql12624975",
+    "host": "sql12.freemysqlhosting.net",
+    "dialect": "mysql"
+  },
   "test": {
     "username": "root",
     "password": "password",

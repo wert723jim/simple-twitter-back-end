@@ -5,6 +5,8 @@ info:
   description: '提供貼文、留言和按讚服務的內容分享平台'
 
 servers:
+  - description: '遠端伺服器'
+    url: https://simpletwitter-1-a0198651.deta.app/api
   - description: '開發伺服器'
     url: http://localhost:3000/api
 

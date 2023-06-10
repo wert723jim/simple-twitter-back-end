@@ -1,5 +1,4 @@
 const router = require('express').Router()
-const { getUser } = require('../../_helpers')
 const registerController = require('../../controllers/registerController')
 const loginController = require('../../controllers/loginController')
 const refreshController = require('../../controllers/refreshController')

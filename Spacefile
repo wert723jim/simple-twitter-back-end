@@ -1,0 +1,17 @@
+# Spacefile Docs: https://go.deta.dev/docs/spacefile/v0
+v: 0
+micros:
+  - name: simple-twitter-back-end
+    src: ./
+    engine: nodejs16
+    primary: true
+    run: node ./server.js
+    dev: npm run dev
+    public_routes:
+      - '/*'
+    presets:
+      env:
+        - name: ACCESS_TOKEN_SECRET
+          default: '21444c62fa9688cb964245263f3fff217bae203863fab985a6dc9392dd7049ec'
+        - name: REFRESH_TOKEN_SECRET
+          default: 'b281824c031fc9c2986a1910e1bfa5719c61a12a82940efdc974ab84426a2b5e'

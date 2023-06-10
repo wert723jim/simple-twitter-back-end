@@ -9,6 +9,7 @@ const makeFollow = async (req, res) => {
   if (!followingUser) {
     return res.status(400).json({ message: '追蹤失敗，該帳號不存在' })
   }
+  // TODO 無法追蹤兩次
   const user = helpers.getUser(req)
   await Followship.create({
     followerId: user.id,

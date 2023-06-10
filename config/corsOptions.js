@@ -4,7 +4,9 @@ const corsOptions = {
       'http://localhost:8080',
       'http://127.0.0.1:8080',
       'http://localhost:3000',
-      'http://localhost:18512', // for api docs
+      'http://localhost:18512', // for api doc
+      'https://simpletwitter-1-a0198651.deta.app',
+      'https://simpletwitter-1-a0198651.deta.app:18512',
     ]
     allowedOrigins.includes(origin) || !origin
       ? cb(null, true)
