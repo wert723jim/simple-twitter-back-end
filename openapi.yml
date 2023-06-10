@@ -723,6 +723,10 @@ paths:
           content:
             application/json:
               examples:
+                dupFollowedError:
+                  summary: 已經追蹤過
+                  value:
+                    message: 已經追蹤過
                 accountNotFoundError:
                   summary: 帳號不存在
                   value:
@@ -751,6 +755,19 @@ paths:
       responses:
         '200':
           description: 成功取消追蹤指定帳號
+        '400':
+          description: 請求錯誤
+          content:
+            application/json:
+              examples:
+                accountNotFoundError:
+                  summary: 帳號不存在
+                  value:
+                    message: 帳號不存在
+                cantUnfollowError:
+                  summary: 尚未追蹤
+                  value:
+                    message: 尚未追蹤
   /admin/users:
     get:
       tags:
@@ -759,6 +776,14 @@ paths:
       summary: 獲取所有帳號資訊
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: order
+          schema:
+            type: string
+            example: tweet
+          required: false
+          description: 排序方式(預設以追蹤人數排序)
       responses:
         '200':
           description: 成功獲取所有使用者資訊

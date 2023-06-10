@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const { getUser } = require('../_helpers')
 
 const getAllUser = async (req, res) => {
+  const order = req.query.order === 'tweet' ? 'tweet_count' : 'follower_count'
   const users = await User.findAll({
     raw: true,
     nest: true,
@@ -51,7 +52,7 @@ const getAllUser = async (req, res) => {
         include: { model: model.Like },
       },
     ],
-    order: [['createdAt', 'DESC']],
+    order: [[order, 'DESC']],
     group: ['id'],
   })
   const result = users.map((user) => {
@@ -113,7 +114,7 @@ const getUserTweets = async (req, res) => {
         ],
         [
           sequelize.literal(
-            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${userId})`
+            `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${req.user.id})`
           ),
           'liked',
         ],
@@ -198,7 +199,7 @@ const getUserLikes = async (req, res) => {
           ],
           [sequelize.literal('(SELECT 1)'), 'liked'],
         ],
-        exclude: ['UserId'],
+        exclude: ['UserId', 'createdAt', 'updatedAt'],
       },
       include: [
         {
@@ -211,7 +212,7 @@ const getUserLikes = async (req, res) => {
           attributes: ['id', 'account', 'name', 'avatar'],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [[model.Like, 'createdAt', 'DESC']],
     })
     return res.json(tweets)
   } catch (err) {
@@ -241,6 +242,7 @@ const getUserFollowings = async (req, res) => {
       as: 'Followings',
       attributes: [],
     },
+    order: [['createdAt', 'DESC']],
   })
   return res.json(followingUsers)
 }
@@ -272,6 +274,7 @@ const getUserFollowers = async (req, res) => {
       as: 'Followers',
       attributes: [],
     },
+    order: [['createdAt', 'DESC']],
   })
   res.json(followerUsers)
 }
