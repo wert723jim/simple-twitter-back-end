@@ -197,7 +197,12 @@ const getUserLikes = async (req, res) => {
             ),
             'likeCount',
           ],
-          [sequelize.literal('(SELECT 1)'), 'liked'],
+          [
+            sequelize.literal(
+              `(SELECT 1 FROM Likes WHERE Likes.TweetId = Tweet.id AND Likes.UserId = ${req.user.id})`
+            ),
+            'liked',
+          ],
         ],
         exclude: ['UserId', 'createdAt', 'updatedAt'],
       },
