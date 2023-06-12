@@ -407,7 +407,12 @@ paths:
               example: { comment: 'this is reply content' }
       responses:
         '200':
-          description: 成功新增留言
+          description: 成功新增留言，回傳新增留言的id
+          content:
+            application/json:
+              schema:
+                type: object
+                example: { id: 100 }
         '400':
           description: 留言內容不能為空
           content:

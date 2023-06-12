@@ -15,7 +15,7 @@ const addTweet = async (req, res) => {
       UserId: user.id,
       description: req.body.description,
     })
-    return res.json({tweet_id: result.id})
+    return res.json({ tweet_id: result.id })
   } catch (err) {
     console.log(err)
     res.status(507).json({ message: '資料庫請求錯誤' })
@@ -110,12 +110,12 @@ const addReply = async (req, res) => {
   if (!tweetCount) {
     return res.status(400).json({ message: '貼文不存在' })
   }
-  await model.Reply.create({
+  const result = await model.Reply.create({
     UserId: user.id,
     TweetId: req.params.tweet_id,
     comment: req.body.comment,
   })
-  res.sendStatus(200)
+  return res.json({ id: result.id })
 }
 
 const getAllReplies = async (req, res) => {
