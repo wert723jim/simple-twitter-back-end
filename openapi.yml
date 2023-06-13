@@ -833,6 +833,12 @@ paths:
               schema:
                 type: object
                 example: { message: '權限不足' }
+        '507':
+          description: '資料庫請求錯誤'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/dbError'
 
 components:
   securitySchemes:

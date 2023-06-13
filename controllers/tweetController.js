@@ -184,16 +184,42 @@ const unlikeTweet = async (req, res) => {
 }
 
 const deleteTweet = async (req, res) => {
-  const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
-  if (!foundTweet) {
-    return res.stauts(400).json({ message: '刪除失敗，查無該貼文' })
+  try {
+    const foundTweet = await model.Tweet.findByPk(req.params.tweet_id)
+    if (!foundTweet) {
+      return res.stauts(400).json({ message: '刪除失敗，查無該貼文' })
+    }
+
+    await model.sequelize.transaction({}, async (t) => {
+      // 刪除留言
+      await model.Reply.destroy({
+        where: {
+          TweetId: req.params.tweet_id,
+        },
+        t,
+      })
+
+      // 刪除按讚
+      await model.Like.destroy({
+        where: {
+          TweetId: req.params.tweet_id,
+        },
+        t,
+      })
+
+      // 刪除貼文
+      await model.Tweet.destroy({
+        where: {
+          id: req.params.tweet_id,
+        },
+        t,
+      })
+    })
+    return res.sendStatus(200)
+  } catch (err) {
+    console.log(err)
+    return res.status(507).json({ message: '資料庫請求錯誤' })
   }
-  model.Tweet.destroy({
-    where: {
-      id: req.params.tweet_id,
-    },
-  })
-  res.sendStatus(200)
 }
 
 module.exports = {
